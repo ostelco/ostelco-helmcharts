@@ -1,0 +1,63 @@
+apiVersion: apps/v1beta2
+kind: Deployment
+metadata:
+  name: {{ template "echoserver.fullname" . }}
+  labels:
+    app: {{ template "echoserver.name" . }}
+    chart: {{ template "echoserver.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ template "echoserver.name" . }}
+      release: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app: {{ template "echoserver.name" . }}
+        release: {{ .Release.Name }}
+    spec:
+        containers:
+        - name: {{ .Chart.Name }}
+          image: {{ .Values.image.name }}:{{ .Values.image.tag }}
+          imagePullPolicy: {{ .Values.image.imagePullPolicy }}
+          ports:
+          - name: http
+            containerPort: {{ .Values.containerPort }}
+            protocol: TCP
+          env:
+          - name: PORT
+            value: {{ .Values.containerPort }}
+     {{- range $key, $value := .Values.envVars }}
+          - name: {{ $key }}
+            value: {{  $value | default  "default env var $key"   | upper }}
+      {{- end }}              
+              
+         # exposing pod info as env variables using k8s downward API for demo purposes
+         # https://kubernetes.io/docs/tasks/inject-data-application/environment-variable-expose-pod-information/
+          - name: POD_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.name
+          - name: POD_NAMESPACE
+            valueFrom:
+               fieldRef:
+                 fieldPath: metadata.namespace
+          - name: POD_IP
+            valueFrom:
+               fieldRef:
+                 fieldPath: status.podIP
+          - name: POD_NODE_NAME
+            valueFrom:
+               fieldRef:
+                 fieldPath: spec.nodeName
+           # exposing Helm info as env variables for demo purposes
+           # see https://docs.helm.sh/chart_template_guide/#built-in-objects
+          - name: HELM_CHART_NAME
+            value: chart-name # make me dynamic
+          - name: HELM_CHART_VERSION
+            value: chart-version # make me dynamic
+          - name: HELM_RELEASE
+            value: release-name # make me dynamic        
