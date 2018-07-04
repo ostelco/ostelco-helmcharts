@@ -30,3 +30,13 @@ Create chart name and version as used by the chart label.
 {{- define "echoserver.chart" -}}
 {{- printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" | trunc 63 | trimSuffix "-" -}}
 {{- end -}}
+
+{{/*
+Create labels
+*/}}
+{{- define "echoserver.labels" -}}
+app: {{ template "echoserver.name" . }}
+chart: {{ template "echoserver.chart" . }}
+release: {{ .Release.Name }}
+heritage: {{ .Release.Service }}
+{{- end -}}

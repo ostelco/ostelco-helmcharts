@@ -3,12 +3,9 @@ kind: Deployment
 metadata:
   name: {{ template "echoserver.fullname" . }}
   labels:
-    app: {{ template "echoserver.name" . }}
-    chart: {{ template "echoserver.chart" . }}
-    release: {{ .Release.Name }}
-    heritage: {{ .Release.Service }}
+    {{ template "echoserver.labels" . }}
 spec:
-  replicas: {{ .Values.replicaCount }}
+  replicas: {{ .Values.replicaCount | default 1 }}
   selector:
     matchLabels:
       app: {{ template "echoserver.name" . }}
@@ -56,8 +53,8 @@ spec:
            # exposing Helm info as env variables for demo purposes
            # see https://docs.helm.sh/chart_template_guide/#built-in-objects
           - name: HELM_CHART_NAME
-            value: chart-name # make me dynamic
+            value: {{ .Chart.Name }}
           - name: HELM_CHART_VERSION
-            value: chart-version # make me dynamic
+            value: {{ .Chart.Version }}
           - name: HELM_RELEASE
-            value: release-name # make me dynamic        
+            value: {{ .Release.Name }}
