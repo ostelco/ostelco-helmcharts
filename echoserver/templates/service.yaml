@@ -4,12 +4,12 @@ kind: Service
 metadata:
   name: {{ template "echoserver.fullname" . }}
   labels:
-    {{ template "echoserver.labels" . }}
+{{ include "echoserver.labels" . | indent 4 }}
 spec:
   type: {{ .Values.service.type | default "ClusterIP" }}
   ports:
     - port: {{ required "A valid port is required" .Values.service.port }}
-      targetPort: {{ .Values.service.port }}
+      targetPort: {{ .Values.containerPort }}
       protocol: {{ required "Provide a protocol (http/https)" .Values.service.protocol }}
       name: http
   selector:

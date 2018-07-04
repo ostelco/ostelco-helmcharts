@@ -3,7 +3,7 @@ kind: Deployment
 metadata:
   name: {{ template "echoserver.fullname" . }}
   labels:
-    {{ template "echoserver.labels" . }}
+{{ include "echoserver.labels" . | indent 4 }}
 spec:
   replicas: {{ .Values.replicaCount | default 1 }}
   selector:
@@ -29,7 +29,7 @@ spec:
             value: {{ .Values.containerPort }}
      {{- range $key, $value := .Values.envVars }}
           - name: {{ $key }}
-            value: {{  $value | default  "default env var $key"   | upper }}
+            value: {{  $value | default  "default env var"   | upper }}
       {{- end }}              
               
          # exposing pod info as env variables using k8s downward API for demo purposes
