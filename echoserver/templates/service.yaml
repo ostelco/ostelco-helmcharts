@@ -1,19 +1,18 @@
+{{- if .Values.service -}}
 apiVersion: v1
 kind: Service
 metadata:
   name: {{ template "echoserver.fullname" . }}
   labels:
-    app: {{ template "echoserver.name" . }}
-    chart: {{ template "echoserver.chart" . }}
-    release: {{ .Release.Name }}
-    heritage: {{ .Release.Service }}
+    {{ template "echoserver.labels" . }}
 spec:
-  type: {{ .Values.service.type }}
+  type: {{ .Values.service.type | default "ClusterIP" }}
   ports:
-    - port: {{ .Values.service.port }}
-      targetPort: http
-      protocol: TCP
+    - port: {{ required "A valid port is required" .Values.service.port }}
+      targetPort: {{ .Values.service.port }}
+      protocol: {{ required "Provide a protocol (http/https)" .Values.service.protocol }}
       name: http
   selector:
     app: {{ template "echoserver.name" . }}
     release: {{ .Release.Name }}
+{{- end -}}
