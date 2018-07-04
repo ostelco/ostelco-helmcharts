@@ -1,4 +1,4 @@
-apiVersion: apps/v1beta2
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: {{ template "echoserver.fullname" . }}
@@ -26,11 +26,11 @@ spec:
             protocol: TCP
           env:
           - name: PORT
-            value: {{ .Values.containerPort }}
-     {{- range $key, $value := .Values.envVars }}
+            value: {{ .Values.containerPort | quote }}
+        {{- range $key, $value := .Values.envVars }}
           - name: {{ $key }}
-            value: {{  $value | default  "default env var"   | upper }}
-      {{- end }}              
+            value: {{ $value | default  "default env var" | upper | quote }}
+        {{- end }}
               
          # exposing pod info as env variables using k8s downward API for demo purposes
          # https://kubernetes.io/docs/tasks/inject-data-application/environment-variable-expose-pod-information/
