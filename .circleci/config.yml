@@ -6,20 +6,22 @@ jobs:
     working_directory: ~/repo
     steps:
     - checkout
-    - run
-      name: running helm package
-      command: |
-        mkdir ~/charts
-        helm init --client-only
-        helm package $(find charts  -name '\..*' -prune -o -type dir -maxdepth 1 -mindepth 1) -d ~/charts
-        helm repo index ~/charts
-        gsutil cp ~/charts/* gs://pantel-tests-charts
+    - run:
+        name: running helm package
+        command: |
+          echo $GOOGLE_CREDENTIALS > $HOME/pantel-tests.json
+          gcloud auth activate-service-account --key-file=$HOME/pantel-tests.json
+          mkdir ~/charts
+          helm init --client-only
+          helm package $(find charts  -name '\..*' -prune -o -type dir -maxdepth 1 -mindepth 1) -d ~/charts
+          helm repo index ~/charts
+          gsutil cp ~/charts/* gs://pantel-tests-charts
 
 workflows:
   version: 2
   my-workflow:
     jobs:
-    - helm-package
+    - helm-package:
         filters:
           branches:
             only:
