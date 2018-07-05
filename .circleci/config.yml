@@ -9,6 +9,8 @@ jobs:
     - run:
         name: running helm package
         command: |
+          echo $GOOGLE_CREDENTIALS > $HOME/pantel-tests.json
+          gcloud auth activate-service-account --key-file=$HOME/pantel-tests.json
           mkdir ~/charts
           helm init --client-only
           helm package $(ls -d */) -d ~/charts
