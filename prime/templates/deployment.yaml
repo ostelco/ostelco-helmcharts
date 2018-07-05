@@ -20,15 +20,27 @@ spec:
         release: {{ .Release.Name }}
     spec:
       volumes:
-      - name: secret-config
-        secret:
-          secretName: pantel-prod.json
+      - name: firebase-service-account
+        emptyDir: {}
+      initContainers:
+        - name: init-secrets
+          image: busybox
+          args: 
+            - /bin/sh
+            - -c
+            - echo $FIREBASE_SERVICE_ACCOUNT | base64 -d > /secret/pantel-prod.json
+          env:
+          - name: FIREBASE_SERVICE_ACCOUNT
+            value: {{ .Values.firebaseServiceAccount }}
+          volumeMounts:
+          - name: firebase-service-account
+            mountPath: "/secret"
       containers:
         - name: {{ .Chart.Name }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           volumeMounts:
-          - name: secret-config
+          - name: firebase-service-account
             mountPath: "/secret"
             readOnly: true
           ports:     
@@ -57,3 +69,4 @@ spec:
       tolerations:
 {{ toYaml . | indent 8 }}
     {{- end }}
+
