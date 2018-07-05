@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ template "prime.name" . }}-api
+  labels:
+    app: {{ template "prime.name" . }}
+    chart: {{ template "prime.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    - port: {{ .Values.service.port }}
+      targetPort: {{ .Values.service.targetPort }} 
+      protocol: TCP
+      name: {{ if eq ( .Values.service.port | quote ) "443" }} https {{ else }} http {{ end }}  
+  selector:
+    app: {{ template "prime.name" . }}
+    release: {{ .Release.Name }}

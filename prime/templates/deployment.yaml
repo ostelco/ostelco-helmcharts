@@ -1,0 +1,59 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ template "prime.fullname" . }}
+  labels:
+    app: {{ template "prime.name" . }}
+    chart: {{ template "prime.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ template "prime.name" . }}
+      release: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app: {{ template "prime.name" . }}
+        release: {{ .Release.Name }}
+    spec:
+      volumes:
+      - name: secret-config
+        secret:
+          secretName: pantel-prod.json
+      containers:
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          volumeMounts:
+          - name: secret-config
+            mountPath: "/secret"
+            readOnly: true
+          ports:     
+          - containerPort: 8080
+          - containerPort: 8081
+          - containerPort: 8082
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 8081
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 8081
+          resources:
+{{ toYaml .Values.resources | indent 12 }}
+    {{- with .Values.nodeSelector }}
+      nodeSelector:
+{{ toYaml . | indent 8 }}
+    {{- end }}
+    {{- with .Values.affinity }}
+      affinity:
+{{ toYaml . | indent 8 }}
+    {{- end }}
+    {{- with .Values.tolerations }}
+      tolerations:
+{{ toYaml . | indent 8 }}
+    {{- end }}
