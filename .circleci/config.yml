@@ -11,7 +11,7 @@ jobs:
       command: |
         mkdir ~/charts
         helm init --client-only
-        helm package $(ls -d */) -d ~/charts
+        helm package $(find charts  -name '\..*' -prune -o -type dir -maxdepth 1 -mindepth 1) -d ~/charts
         helm repo index ~/charts
         gsutil cp ~/charts/* gs://pantel-tests-charts
 
@@ -24,4 +24,3 @@ workflows:
           branches:
             only:
             - master
-   
