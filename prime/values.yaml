@@ -5,7 +5,7 @@
 replicaCount: 1
 
 image:
-  repository: gcr.io/pantel-2decb/prime
+  repository: gcr.io/pantel-tests/prime
   tag: prime-1.6.1
   pullPolicy: Always
 
