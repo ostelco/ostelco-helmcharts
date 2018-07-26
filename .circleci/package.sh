@@ -86,8 +86,8 @@ helm repo index .charts --url ${OSTELCO_GCS_HELM_REPO_URL}
 
 echo "pushing charts to ${OSTELCO_HELM_REPO_NAME} repo ..."
 
-# pushing charts to s3
-gsutil cp -r .charts gs://${OSTELCO_GCS_HELM_REPO_BUCKET_NAME}/
+# pushing charts to GCS
+gsutil cp -r .charts/. gs://${OSTELCO_GCS_HELM_REPO_BUCKET_NAME}/
 if [ $? -gt 0 ]; then
     echo "Failed to push charts to GCS ... Terminating!"
     exit 9
