@@ -2,8 +2,8 @@
 
 function gcloud_auth() {
   # populating the json credentials file from env variable
-  if [ ! -z "${GCLOUD_CREDENTIALS}" ]; then
-    echo $GCLOUD_CREDENTIALS > /tmp/credentials.json
+  if [ ! -z "${GOOGLE_CREDENTIALS}" ]; then
+    echo $GOOGLE_CREDENTIALS > /tmp/credentials.json
     if [ $? != 0 ]; then
         echo "FAILED to write Google credentials into /tmp/credentials.json. Aborting!"
         exit 1
