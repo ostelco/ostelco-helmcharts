@@ -1,0 +1,21 @@
+# manually built and pushed as eu.gcr.io/pi-ostelco-dev/helm-builder:<helm version>
+FROM debian:9.3-slim
+
+RUN apt-get update && apt-get install sudo
+
+# install gcloud (needed to enable access to GCS buckets hosting hte chart repo)
+
+RUN sudo apt-get --assume-yes install gnupg curl tar git \
+    && sudo apt-get --assume-yes install lsb-release \
+    && export CLOUD_SDK_REPO="cloud-sdk-$(lsb_release -c -s)" \
+    && echo "deb http://packages.cloud.google.com/apt $CLOUD_SDK_REPO main" | sudo tee -a /etc/apt/sources.list.d/google-cloud-sdk.list \
+    && curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add - \
+    && sudo apt-get --assume-yes update && sudo apt-get --assume-yes install google-cloud-sdk
+
+# install helm and the gcs plugin
+ENV HELM_VERSION v2.8.1
+
+RUN curl -L http://storage.googleapis.com/kubernetes-helm/helm-${HELM_VERSION}-linux-amd64.tar.gz | tar zxv -C /tmp \
+    && mv /tmp/linux-amd64/helm /usr/local/bin/helm \
+    && chmod +x /usr/local/bin/helm \
+    && rm -rf /tmp/linux-amd64
