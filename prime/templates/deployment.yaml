@@ -7,23 +7,47 @@ metadata:
     chart: {{ template "prime.chart" . }}
     release: {{ .Release.Name }}
     heritage: {{ .Release.Service }}
+    tier: backend
 spec:
   replicas: {{ .Values.replicaCount }}
   selector:
     matchLabels:
       app: {{ template "prime.name" . }}
       release: {{ .Release.Name }}
+      tier: backend
   template:
     metadata:
       labels:
         app: {{ template "prime.name" . }}
         release: {{ .Release.Name }}
+        tier: backend
     spec:
       volumes:
+      {{- range .Values.prime.secrets }}
+      - name: {{ .secretName }}
+        secret: 
+          secretName: {{ .secretName }}
+      {{- end }}
+      {{- range .Values.esp.secrets }}
+      - name: {{ .secretName }}
+        secret: 
+          secretName: {{ .secretName }}
+      {{- end }}
+      {{- range .Values.apiEsp.secrets }}
+      - name: {{ .secretName }}
+        secret: 
+          secretName: {{ .secretName }}
+      {{- end }}
+      {{- if ne .Values.firebaseServiceAccount "" }} 
       - name: firebase-service-account
         emptyDir: {}
+      {{- end }}  
+
+      # init container used to write firbase secret into a shared pod volume
+      # This init container is only activated if firebaseServiceAccount is not empty
+       {{- if ne .Values.firebaseServiceAccount "" }} 
       initContainers:
-        - name: init-secrets
+        - name: firbase-secret
           image: busybox
           args: 
             - /bin/sh
@@ -35,28 +59,120 @@ spec:
           volumeMounts:
           - name: firebase-service-account
             mountPath: "/secret"
+       {{- end }}    
+      # End of init containers  
       containers:
-        - name: {{ .Chart.Name }}
-          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
-          imagePullPolicy: {{ .Values.image.pullPolicy }}
+      ## Start of esp container 
+      {{- if .Values.esp.enabled }}
+      - name: esp
+        image: {{ .Values.esp.image }}:{{ .Values.esp.tag }}
+        imagePullPolicy: {{ .Values.esp.pullPolicy }}
+        args: [
+          "--http2_port=9000",
+          "--ssl_port=8443",
+          "--service={{ .Values.esp.endpointAddress }}",
+          "--rollout_strategy=managed",
+          "--backend=grpc://127.0.0.1:8082"
+        ]
+        {{- if .Values.esp.env }}
+          env: 
+            {{- range $key, $value := .Values.esp.env }}
+          - name: {{ $key }}
+            value: {{ $value | quote }}
+            {{- end }}
+        {{- end }}
+        {{- if .Values.esp.ports }}
+        ports:
+          {{- range .Values.esp.ports }}
+        - containerPort: {{ . }}
+          {{- end }}
+        {{- end }}
+        volumeMounts:
+        {{- range .Values.esp.secrets }}
+        - mountPath: {{ .containerMountPath }}
+          name: {{ .secretName }}
+          readOnly: true
+        {{- end }}  
+      {{- end }}    
+      ## End of esp container 
+      ## Start of api-esp container 
+      {{- if .Values.apiEsp.enabled }}
+      - name: api-esp
+        image: {{ .Values.esp.image }}:{{ .Values.esp.tag }}
+        imagePullPolicy: {{ .Values.esp.pullPolicy }}
+        args: [
+          "--http2_port=9002",
+          "--ssl_port", "443",
+          "--status_port=8092",
+          "--service={{ .Values.apiEsp.endpointAddress }}",
+          "--rollout_strategy=managed",
+          "--backend=127.0.0.1:8080"
+        ]
+        {{- if .Values.apiEsp.env }}
+          env: 
+            {{- range $key, $value := .Values.apiEsp.env }}
+          - name: {{ $key }}
+            value: {{ $value | quote }}
+            {{- end }}
+        {{- end }}
+        {{- if .Values.apiEsp.ports }}
+        ports:
+          {{- range .Values.apiEsp.ports }}
+        - containerPort: {{ . }}
+          {{- end }}
+        {{- end }}
+        {{- if .Values.apiEsp.secrets }}
+        volumeMounts:
+        {{- end }}
+        {{- range .Values.apiEsp.secrets }}
+        - mountPath: {{ .containerMountPath }}
+          name: {{ .secretName }}
+          readOnly: true
+        {{- end }}  
+      {{- end }}
+        ## End of api-esp container 
+        ## Start of prime container  
+        - name: prime
+          image: "{{ .Values.prime.image }}:{{ .Values.prime.tag }}"
+          imagePullPolicy: {{ .Values.prime.pullPolicy }}
+          {{- if .Values.prime.env }}
+          env: 
+            {{- range $key, $value := .Values.prime.env }}
+          - name: {{ $key }}
+            value: {{ $value | quote }}
+            {{- end }}
+          {{- end }}
           volumeMounts:
+          {{- if ne .Values.firebaseServiceAccount "" }}
           - name: firebase-service-account
             mountPath: "/secret"
             readOnly: true
-          ports:     
-          - containerPort: 8080
-          - containerPort: 8081
-          - containerPort: 8082
+          {{- else }}  
+            {{- range .Values.prime.secrets }}
+            name: {{ .secretName }}
+            mountPath: {{ .containerMountPath }}
+            readOnly: true
+            {{- end }}
+          {{- end }}  
+          ports:  
+          {{- range .Values.prime.ports }}
+          - containerPort: {{ . }}
+          {{- end }}   
+          {{- if .Values.prime.livenessProbe }}
           livenessProbe:
             httpGet:
-              path: /
-              port: 8081
+              path: {{ .Values.prime.livenessProbe.path }}
+              port: {{ .Values.prime.livenessProbe.port }}
+          {{- end }}  
+          {{- if .Values.prime.readinessProbe }}  
           readinessProbe:
             httpGet:
-              path: /
-              port: 8081
+              path: {{ .Values.prime.readinessProbe.path }}
+              port: {{ .Values.prime.readinessProbe.port }}
+           {{- end }}      
           resources:
-{{ toYaml .Values.resources | indent 12 }}
+{{ toYaml .Values.prime.resources | indent 12 }}
+        ## End of prime container 
     {{- with .Values.nodeSelector }}
       nodeSelector:
 {{ toYaml . | indent 8 }}

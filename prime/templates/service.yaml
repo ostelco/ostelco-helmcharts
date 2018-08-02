@@ -1,19 +1,42 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ template "prime.name" . }}-api
+  name: {{ .Release.Name }}-{{ template "prime.name" . }}-api
   labels:
     app: {{ template "prime.name" . }}
     chart: {{ template "prime.chart" . }}
     release: {{ .Release.Name }}
     heritage: {{ .Release.Service }}
 spec:
-  type: {{ .Values.service.type }}
+  type: {{ .Values.service.api.type }}
   ports:
-    - port: {{ .Values.service.port }}
-      targetPort: {{ .Values.service.targetPort }} 
+    - port: {{ .Values.service.api.port }}
+      targetPort: {{ .Values.service.api.targetPort }} 
       protocol: TCP
-      name: {{ if eq ( .Values.service.port | quote ) "443" }} https {{ else }} http {{ end }}  
+      name: {{ if eq ( .Values.service.api.port | quote ) "443" }} https {{ else }} http {{ end }}  
   selector:
     app: {{ template "prime.name" . }}
     release: {{ .Release.Name }}
+    tier: backend
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Release.Name }}-{{ template "prime.name" . }}-service
+  labels:
+    app: {{ template "prime.name" . }}
+    chart: {{ template "prime.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+  type: {{ .Values.service.prime.type }}
+  ports:
+    - port: {{ .Values.service.prime.port }}
+      targetPort: {{ .Values.service.prime.targetPort }} 
+      protocol: TCP
+      name: grpc 
+  selector:
+    app: {{ template "prime.name" . }}
+    release: {{ .Release.Name }}
+    tier: backend
