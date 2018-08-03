@@ -1,0 +1,39 @@
+{{- range .Values.letsencrypt }}
+apiVersion: certmanager.k8s.io/v1alpha1
+kind: {{ if eq .type "ClusterIssuer" }}ClusterIssuer{{ else }} Issuer {{ end }}
+metadata:
+  name: {{ .name }}
+  {{- if eq .type "Issuer" }}
+  namespace: {{ .namespace | default "default" }}
+  {{- end }}
+spec:
+  acme:
+    {{- if eq (.apiVersion | quote) (quote 2) }}
+    server: https://acme-{{ if .staging }}staging-{{ end }}v02.api.letsencrypt.org/directory
+    {{- else }}
+    server: https://acme-{{ if .staging }}staging-{{ end }}v01.api.letsencrypt.org/directory 
+    {{- end }}
+    email: {{ .acmeEmail }}
+    privateKeySecretRef:
+      name: {{ .name }}
+   {{- if .http01.enabled }}
+    # Enable the HTTP-01 challenge provider
+    http01: {}
+   {{- end }} 
+   {{- if .dns01.enabled }}
+    # ACME dns-01 provider configurations
+    dns01:
+      # Here we define a list of DNS-01 providers that can solve DNS challenges
+      providers:
+      - name: {{ .dns01.provider }}
+        clouddns:
+          # A secretKeyRef to a the google cloud json service account
+          serviceAccountSecretRef:
+            name: {{ .dns01.serviceAccountSecretName }} 
+            key: {{ .dns01.serviceAccountKey }}
+          # The project in which to update the DNS zone
+          project: {{ .dns01.googleProject }} 
+    {{- end }}
+---
+{{- end }}
+

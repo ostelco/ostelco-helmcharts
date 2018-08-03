@@ -1,0 +1,40 @@
+# Default values for cert-issuer.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+letsencrypt:
+  # production:
+  #   type: ClusterIssuer # ClusterIssuer or Issuer
+  #   namespace: default # only needed if type is Issuer
+  #   acmeEmail: me@example.com
+  #   name: letsencrypt-production
+  #   apiVersion: 2
+  #   http01:
+  #     enabled: true
+  #   dns01: 
+  #     enabled: false  
+  # staging:
+  #   type: ClusterIssuer
+  #   namespace: default # only needed if type is Issuer
+  #   acmeEmail: me@example.com
+  #   name: letsencrypt-staging
+  #   apiVersion: 2
+  #   staging: true
+  #   http01:
+  #     enabled: true
+  #   dns01: 
+  #     enabled: false   
+  # staging-v2:
+  #   type: Issuer
+  #   namespace: default # only needed if type is Issuer
+  #   acmeEmail: me@example.com
+  #   name: letsencrypt-staging-v2 
+  #   apiVersion: 2 
+  #   staging: true 
+  #   http01:
+  #     enabled: true
+  #   dns01: 
+  #     enabled: true 
+  #     provider: google-dns
+  #     googleProject: your-project
+  #     serviceAccountSecretName: cert-manager-google-serviceaccount # the secret containing the google cloud credentials with DNS admin permission
+  #     serviceAccountKey: service-account.json  

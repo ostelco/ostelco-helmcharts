@@ -1,0 +1,4 @@
+apiVersion: v1
+description: A Helm chart packaging the Cluster Issuers for cert-manager
+name: cert-issuer
+version: 0.2.0
