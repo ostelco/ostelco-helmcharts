@@ -1,0 +1,45 @@
+{{- if .Values.certs.enabled -}}
+apiVersion: certmanager.k8s.io/v1alpha1
+kind: Certificate
+metadata:
+  name: {{ template "prime.fullname" . }}-api-crt
+spec:
+  secretName: api-tls
+  dnsNames:
+  {{- range .Values.certs.apiDns }}
+  - {{ . }}
+  {{- end }}
+  issuerRef:
+    name: {{ .Values.certs.issuer }}
+    kind: ClusterIssuer
+  acme:
+    config:
+    - dns01:
+        provider: google-dns
+      domains:
+      {{- range .Values.certs.apiDns }}
+      - {{ . }}
+      {{- end }}
+---
+apiVersion: certmanager.k8s.io/v1alpha1
+kind: Certificate
+metadata:
+  name: {{ template "prime.fullname" . }}-ocs-crt
+spec:
+  secretName: ocs-tls
+  dnsNames:
+  {{- range .Values.certs.ocsDns }}
+  - {{ . }}
+  {{- end }}
+  issuerRef:
+    name: {{ .Values.certs.issuer }}
+    kind: ClusterIssuer
+  acme:
+    config:
+    - dns01:
+        provider: google-dns
+      domains:
+      {{- range .Values.certs.ocsDns }}
+      - {{ . }}
+      {{- end }}      
+{{- end -}}

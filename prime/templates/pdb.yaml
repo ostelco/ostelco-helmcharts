@@ -1,0 +1,13 @@
+{{- if .Values.disruptionBudget.enabled }}
+apiVersion: policy/v1beta1
+kind: PodDisruptionBudget
+metadata:
+  name: {{ template "prime.fullname" . }}-pdb
+spec:
+  minAvailable: {{ .Values.disruptionBudget.minAvailable }}
+  selector:
+    matchLabels:
+      app: {{ template "prime.name" . }}
+      release: {{ .Release.Name }}
+      tier: backend
+{{- end }} 

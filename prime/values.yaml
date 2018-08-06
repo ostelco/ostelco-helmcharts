@@ -85,6 +85,16 @@ ingress:
   #      - chart-example.local
 
 
+certs: 
+  enabled: false
+  issuer: letsencrypt-staging # or letsencrypt-production
+  apiDns: []
+  ocsDns: []
+
+disruptionBudget: 
+  enabled: false
+  minAvailable: 1
+
 nodeSelector: {}
 
 tolerations: []
