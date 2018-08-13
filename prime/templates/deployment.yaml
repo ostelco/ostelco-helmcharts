@@ -147,13 +147,12 @@ spec:
           - name: firebase-service-account
             mountPath: "/secret"
             readOnly: true
-          {{- else }}  
-            {{- range .Values.prime.secrets }}
-            name: {{ .secretName }}
+          {{- end }}  
+          {{- range .Values.prime.secrets }}
+          - name: {{ .secretName }}
             mountPath: {{ .containerMountPath }}
             readOnly: true
-            {{- end }}
-          {{- end }}  
+          {{- end }}
           ports:  
           {{- range .Values.prime.ports }}
           - containerPort: {{ . }}
