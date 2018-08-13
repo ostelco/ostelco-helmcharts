@@ -130,46 +130,46 @@ spec:
           readOnly: true
         {{- end }}  
       {{- end }}
-        ## End of api-esp container 
-        ## Start of prime container  
-        - name: prime
-          image: "{{ .Values.prime.image }}:{{ .Values.prime.tag }}"
-          imagePullPolicy: {{ .Values.prime.pullPolicy }}
-          {{- if .Values.prime.env }}
-          env: 
-            {{- range $key, $value := .Values.prime.env }}
-          - name: {{ $key }}
-            value: {{ $value | quote }}
-            {{- end }}
+      ## End of api-esp container 
+      ## Start of prime container  
+      - name: prime
+        image: "{{ .Values.prime.image }}:{{ .Values.prime.tag }}"
+        imagePullPolicy: {{ .Values.prime.pullPolicy }}
+        {{- if .Values.prime.env }}
+        env: 
+          {{- range $key, $value := .Values.prime.env }}
+        - name: {{ $key }}
+          value: {{ $value | quote }}
           {{- end }}
-          volumeMounts:
-          {{- if ne .Values.firebaseServiceAccount "" }}
-          - name: firebase-service-account
-            mountPath: "/secret"
-            readOnly: true
-          {{- end }}  
-          {{- range .Values.prime.secrets }}
-          - name: {{ .secretName }}
-            mountPath: {{ .containerMountPath }}
-            readOnly: true
-          {{- end }}
-          ports:  
-          {{- range .Values.prime.ports }}
-          - containerPort: {{ . }}
-          {{- end }}   
-          {{- if .Values.prime.livenessProbe }}
-          livenessProbe:
-            httpGet:
-              path: {{ .Values.prime.livenessProbe.path }}
-              port: {{ .Values.prime.livenessProbe.port }}
-          {{- end }}  
-          {{- if .Values.prime.readinessProbe }}  
-          readinessProbe:
-            httpGet:
-              path: {{ .Values.prime.readinessProbe.path }}
-              port: {{ .Values.prime.readinessProbe.port }}
-           {{- end }}      
-          resources:
+        {{- end }}
+        volumeMounts:
+        {{- if ne .Values.firebaseServiceAccount "" }}
+        - name: firebase-service-account
+          mountPath: "/secret"
+          readOnly: true
+        {{- end }}  
+        {{- range .Values.prime.secrets }}
+        - name: {{ .secretName }}
+          mountPath: {{ .containerMountPath }}
+          readOnly: true
+        {{- end }}
+        ports:  
+        {{- range .Values.prime.ports }}
+        - containerPort: {{ . }}
+        {{- end }}   
+        {{- if .Values.prime.livenessProbe }}
+        livenessProbe:
+          httpGet:
+            path: {{ .Values.prime.livenessProbe.path }}
+            port: {{ .Values.prime.livenessProbe.port }}
+        {{- end }}  
+        {{- if .Values.prime.readinessProbe }}  
+        readinessProbe:
+          httpGet:
+            path: {{ .Values.prime.readinessProbe.path }}
+            port: {{ .Values.prime.readinessProbe.port }}
+         {{- end }}      
+        resources:
 {{ toYaml .Values.prime.resources | indent 12 }}
         ## End of prime container 
     {{- with .Values.nodeSelector }}
