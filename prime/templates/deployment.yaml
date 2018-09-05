@@ -28,22 +28,22 @@ spec:
     spec:
       volumes:
       {{- range .Values.prime.secrets }}
-      - name: {{ .secretName }}
+      - name: {{ .secretName }}-prime
         secret: 
           secretName: {{ .secretName }}
       {{- end }}
       {{- range .Values.ocsEsp.secrets }}
-      - name: {{ .secretName }}
+      - name: {{ .secretName }}-ocs
         secret: 
           secretName: {{ .secretName }}
       {{- end }}
       {{- range .Values.apiEsp.secrets }}
-      - name: {{ .secretName }}
+      - name: {{ .secretName }}-api
         secret: 
           secretName: {{ .secretName }}
       {{- end }}
       {{- range .Values.metricsEsp.secrets }}
-      - name: {{ .secretName }}
+      - name: {{ .secretName }}-metrics
         secret: 
           secretName: {{ .secretName }}
       {{- end }}
