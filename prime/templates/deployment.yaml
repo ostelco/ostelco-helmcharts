@@ -101,7 +101,7 @@ spec:
         volumeMounts:
         {{- range .Values.ocsEsp.secrets }}
         - mountPath: {{ .containerMountPath }}
-          name: {{ .secretName }}
+          name: {{ .secretName }}-ocs
           readOnly: true
         {{- end }}  
       {{- end }}    
@@ -138,7 +138,7 @@ spec:
         {{- end }}
         {{- range .Values.apiEsp.secrets }}
         - mountPath: {{ .containerMountPath }}
-          name: {{ .secretName }}
+          name: {{ .secretName }}-api
           readOnly: true
         {{- end }}  
       {{- end }}
@@ -175,7 +175,7 @@ spec:
         {{- end }}
         {{- range .Values.metricsEsp.secrets }}
         - mountPath: {{ .containerMountPath }}
-          name: {{ .secretName }}
+          name: {{ .secretName }}-metrics
           readOnly: true
         {{- end }}  
       {{- end }}
@@ -198,7 +198,7 @@ spec:
           readOnly: true
         {{- end }}  
         {{- range .Values.prime.secrets }}
-        - name: {{ .secretName }}
+        - name: {{ .secretName }}-prime
           mountPath: {{ .containerMountPath }}
           readOnly: true
         {{- end }}
