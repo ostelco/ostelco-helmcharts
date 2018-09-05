@@ -42,6 +42,11 @@ spec:
         secret: 
           secretName: {{ .secretName }}
       {{- end }}
+      {{- range .Values.metricsEsp.secrets }}
+      - name: {{ .secretName }}
+        secret: 
+          secretName: {{ .secretName }}
+      {{- end }}
       {{- if ne .Values.firebaseServiceAccount "" }} 
       - name: firebase-service-account
         emptyDir: {}
