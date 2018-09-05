@@ -8,6 +8,10 @@ metadata:
     release: {{ .Release.Name }}
     heritage: {{ .Release.Service }}
     tier: backend
+  {{- if .Values.prime.annotations }}  
+  annotations: 
+{{ toYaml .Values.prime.annotations | indent 4 }}
+  {{- end }}
 spec:
   replicas: {{ .Values.replicaCount }}
   selector:
@@ -28,7 +32,7 @@ spec:
         secret: 
           secretName: {{ .secretName }}
       {{- end }}
-      {{- range .Values.esp.secrets }}
+      {{- range .Values.ocsEsp.secrets }}
       - name: {{ .secretName }}
         secret: 
           secretName: {{ .secretName }}
@@ -62,39 +66,40 @@ spec:
        {{- end }}    
       # End of init containers  
       containers:
-      ## Start of esp container 
-      {{- if .Values.esp.enabled }}
-      - name: esp
+      ## Start of ocs-esp container 
+      {{- if .Values.ocsEsp.enabled }}
+      - name: ocs-esp
         image: {{ .Values.esp.image }}:{{ .Values.esp.tag }}
         imagePullPolicy: {{ .Values.esp.pullPolicy }}
         args: [
           "--http2_port=9000",
           "--ssl_port=8443",
-          "--service={{ .Values.esp.endpointAddress }}",
+          "--status_port=8090",
+          "--service={{ .Values.ocsEsp.endpointAddress }}",
           "--rollout_strategy=managed",
           "--backend=grpc://127.0.0.1:8082"
         ]
-        {{- if .Values.esp.env }}
+        {{- if .Values.ocsEsp.env }}
           env: 
-            {{- range $key, $value := .Values.esp.env }}
+            {{- range $key, $value := .Values.ocsEsp.env }}
           - name: {{ $key }}
             value: {{ $value | quote }}
             {{- end }}
         {{- end }}
-        {{- if .Values.esp.ports }}
+        {{- if .Values.ocsEsp.ports }}
         ports:
-          {{- range .Values.esp.ports }}
+          {{- range .Values.ocsEsp.ports }}
         - containerPort: {{ . }}
           {{- end }}
         {{- end }}
         volumeMounts:
-        {{- range .Values.esp.secrets }}
+        {{- range .Values.ocsEsp.secrets }}
         - mountPath: {{ .containerMountPath }}
           name: {{ .secretName }}
           readOnly: true
         {{- end }}  
       {{- end }}    
-      ## End of esp container 
+      ## End of ocs-esp container 
       ## Start of api-esp container 
       {{- if .Values.apiEsp.enabled }}
       - name: api-esp
@@ -131,6 +136,42 @@ spec:
         {{- end }}  
       {{- end }}
       ## End of api-esp container 
+      ## Start of metrics-esp container 
+      {{- if .Values.metricsEsp.enabled }}
+      - name: metrics-esp
+        image: {{ .Values.esp.image }}:{{ .Values.esp.tag }}
+        imagePullPolicy: {{ .Values.esp.pullPolicy }}
+        args: [
+          "--http2_port=9004",
+          "--ssl_port", "9443",
+          "--status_port=8094",
+          "--service={{ .Values.metricsEsp.endpointAddress }}",
+          "--rollout_strategy=managed",
+          "--backend=127.0.0.1:8083"
+        ]
+        {{- if .Values.metricsEsp.env }}
+          env: 
+            {{- range $key, $value := .Values.metricsEsp.env }}
+          - name: {{ $key }}
+            value: {{ $value | quote }}
+            {{- end }}
+        {{- end }}
+        {{- if .Values.metricsEsp.ports }}
+        ports:
+          {{- range .Values.metricsEsp.ports }}
+        - containerPort: {{ . }}
+          {{- end }}
+        {{- end }}
+        {{- if .Values.metricsEsp.secrets }}
+        volumeMounts:
+        {{- end }}
+        {{- range .Values.metricsEsp.secrets }}
+        - mountPath: {{ .containerMountPath }}
+          name: {{ .secretName }}
+          readOnly: true
+        {{- end }}  
+      {{- end }}
+      ## End of metrics-esp container 
       ## Start of prime container  
       - name: prime
         image: "{{ .Values.prime.image }}:{{ .Values.prime.tag }}"
