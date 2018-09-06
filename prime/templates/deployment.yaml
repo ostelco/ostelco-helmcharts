@@ -82,8 +82,7 @@ spec:
           "--status_port=8090",
           "--service={{ .Values.ocsEsp.endpointAddress }}",
           "--rollout_strategy=managed",
-          "--backend=grpc://127.0.0.1:8082",
-          "--service_account_key=/etc/nginx/creds/service-account-creds.json"
+          "--backend=grpc://127.0.0.1:8082"
         ]
         {{- if .Values.ocsEsp.env }}
           env: 
@@ -117,8 +116,7 @@ spec:
           "--status_port=8092",
           "--service={{ .Values.apiEsp.endpointAddress }}",
           "--rollout_strategy=managed",
-          "--backend=127.0.0.1:8080",
-          "--service_account_key=/etc/nginx/creds/service-account-creds.json"
+          "--backend=127.0.0.1:8080"
         ]
         {{- if .Values.apiEsp.env }}
           env: 
@@ -154,8 +152,7 @@ spec:
           "--status_port=8094",
           "--service={{ .Values.metricsEsp.endpointAddress }}",
           "--rollout_strategy=managed",
-          "--backend=127.0.0.1:8083",
-          "--service_account_key=/etc/nginx/creds/service-account-creds.json"
+          "--backend=127.0.0.1:8083"
         ]
         {{- if .Values.metricsEsp.env }}
           env: 
