@@ -36,10 +36,10 @@ prime:
   readinessProbe: {}
     # path: /
     # port: 8081  
-  annotations: {}
-    # prometheus.io/scrape: 'true'
-    # prometheus.io/path: '/prometheus-metrics'
-    # prometheus.io/port: '8081'  
+  annotations: 
+    prometheus.io/scrape: 'true'
+    prometheus.io/path: '/prometheus-metrics'
+    prometheus.io/port: '8081'  
 
 esp:
   image: gcr.io/endpoints-release/endpoints-runtime
@@ -117,9 +117,14 @@ ingress:
 
 certs: 
   enabled: false
+  dnsProvider: dev-clouddns
   issuer: letsencrypt-staging # or letsencrypt-production
   apiDns: []
+   # - api.ostelco.org
   ocsDns: []
+   # - ocs.ostelco.org
+  metricsDns: []
+   # - metrics.ostelco.org  
 
 disruptionBudget: 
   enabled: false

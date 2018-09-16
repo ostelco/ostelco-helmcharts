@@ -15,7 +15,7 @@ spec:
   acme:
     config:
     - dns01:
-        provider: google-dns
+        provider: {{ .Values.certs.dnsProvider }}
       domains:
       {{- range .Values.certs.apiDns }}
       - {{ . }}
@@ -37,9 +37,31 @@ spec:
   acme:
     config:
     - dns01:
-        provider: google-dns
+        provider: {{ .Values.certs.dnsProvider }}
       domains:
       {{- range .Values.certs.ocsDns }}
+      - {{ . }}
+      {{- end }} 
+---
+apiVersion: certmanager.k8s.io/v1alpha1
+kind: Certificate
+metadata:
+  name: {{ template "prime.fullname" . }}-metrics-crt
+spec:
+  secretName: metrics-tls
+  dnsNames:
+  {{- range .Values.certs.metricsDns }}
+  - {{ . }}
+  {{- end }}
+  issuerRef:
+    name: {{ .Values.certs.issuer }}
+    kind: ClusterIssuer
+  acme:
+    config:
+    - dns01:
+        provider: {{ .Values.certs.dnsProvider }}
+      domains:
+      {{- range .Values.certs.metricsDns }}
       - {{ . }}
       {{- end }}      
 {{- end -}}
