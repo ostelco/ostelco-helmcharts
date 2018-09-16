@@ -47,6 +47,19 @@ spec:
         secret: 
           secretName: {{ .secretName }}
       {{- end }}
+      
+      {{- if .Values.certs.enabled }}
+      - name: api-tls-volume
+        secret: 
+          secretName: api-tls
+      - name: ocs-tls-volume
+        secret: 
+          secretName: ocs-tls    
+      - name: metrics-tls-volume
+        secret: 
+          secretName: metrics-tls    
+      {{- end }}
+
       {{- if ne .Values.firebaseServiceAccount "" }} 
       - name: firebase-service-account
         emptyDir: {}
@@ -102,7 +115,14 @@ spec:
         - mountPath: {{ .containerMountPath }}
           name: {{ .secretName }}-ocs
           readOnly: true
-        {{- end }}  
+        {{- end }} 
+
+        {{- if .Values.certs.enabled }}
+        - mountPath: /etc/nginx/ssl
+          name: ocs-tls-volume
+          readOnly: true
+        {{- end }}
+
       {{- end }}    
       ## End of ocs-esp container 
       ## Start of api-esp container 
@@ -131,14 +151,18 @@ spec:
         - containerPort: {{ . }}
           {{- end }}
         {{- end }}
-        {{- if .Values.apiEsp.secrets }}
         volumeMounts:
-        {{- end }}
         {{- range .Values.apiEsp.secrets }}
         - mountPath: {{ .containerMountPath }}
           name: {{ .secretName }}-api
           readOnly: true
-        {{- end }}  
+        {{- end }} 
+
+        {{- if .Values.certs.enabled }}
+        - mountPath: /etc/nginx/ssl
+          name: api-tls-volume
+          readOnly: true
+        {{- end }} 
       {{- end }}
       ## End of api-esp container 
       ## Start of metrics-esp container 
@@ -167,14 +191,18 @@ spec:
         - containerPort: {{ . }}
           {{- end }}
         {{- end }}
-        {{- if .Values.metricsEsp.secrets }}
         volumeMounts:
-        {{- end }}
         {{- range .Values.metricsEsp.secrets }}
         - mountPath: {{ .containerMountPath }}
           name: {{ .secretName }}-metrics
           readOnly: true
         {{- end }}  
+
+        {{- if .Values.certs.enabled }}
+        - mountPath: /etc/nginx/ssl
+          name: metrics-tls-volume
+          readOnly: true
+        {{- end }}
       {{- end }}
       ## End of metrics-esp container 
       ## Start of prime container  
