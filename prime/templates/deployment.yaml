@@ -52,12 +52,27 @@ spec:
       - name: api-tls-volume
         secret: 
           secretName: api-tls
+          items:
+          - key: tls.crt
+            path: nginx.crt
+          - key: tls.key
+            path: nginx.key  
       - name: ocs-tls-volume
         secret: 
-          secretName: ocs-tls    
+          secretName: ocs-tls 
+          items:
+          - key: tls.crt
+            path: nginx.crt
+          - key: tls.key
+            path: nginx.key    
       - name: metrics-tls-volume
         secret: 
-          secretName: metrics-tls    
+          secretName: metrics-tls
+          items:
+          - key: tls.crt
+            path: nginx.crt
+          - key: tls.key
+            path: nginx.key     
       {{- end }}
 
       {{- if ne .Values.firebaseServiceAccount "" }} 
