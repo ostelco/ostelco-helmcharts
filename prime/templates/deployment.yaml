@@ -27,6 +27,8 @@ spec:
         tier: backend
     spec:
       volumes:
+      - name: config-data
+        emptyDir: {}
       {{- range .Values.prime.secrets }}
       - name: {{ .secretName }}-prime
         secret: 
@@ -47,44 +49,77 @@ spec:
         secret: 
           secretName: {{ .secretName }}
       {{- end }}
-      
-      {{- if .Values.certs.enabled }}
-      - name: api-tls-volume
+      {{- range .Values.alvinApiEsp.secrets }}
+      - name: {{ .secretName }}-alvin-api
         secret: 
-          secretName: api-tls
-          items:
-          - key: tls.crt
-            path: nginx.crt
-          - key: tls.key
-            path: nginx.key  
-      - name: ocs-tls-volume
-        secret: 
-          secretName: ocs-tls 
-          items:
-          - key: tls.crt
-            path: nginx.crt
-          - key: tls.key
-            path: nginx.key    
-      - name: metrics-tls-volume
-        secret: 
-          secretName: metrics-tls
-          items:
-          - key: tls.crt
-            path: nginx.crt
-          - key: tls.key
-            path: nginx.key     
+          secretName: {{ .secretName }}
       {{- end }}
+      {{- range .Values.houstonApiEsp.secrets }}
+      - name: {{ .secretName }}-houston-api
+        secret: 
+          secretName: {{ .secretName }}
+      {{- end }}
+      
+      # {{- if .Values.certs.enabled }}
+      # - name: api-tls-volume
+      #   secret: 
+      #     secretName: api-tls
+      #     items:
+      #     - key: tls.crt
+      #       path: nginx.crt
+      #     - key: tls.key
+      #       path: nginx.key  
+      # - name: ocs-tls-volume
+      #   secret: 
+      #     secretName: ocs-tls 
+      #     items:
+      #     - key: tls.crt
+      #       path: nginx.crt
+      #     - key: tls.key
+      #       path: nginx.key    
+      # - name: metrics-tls-volume
+      #   secret: 
+      #     secretName: metrics-tls
+      #     items:
+      #     - key: tls.crt
+      #       path: nginx.crt
+      #     - key: tls.key
+      #       path: nginx.key
+      # - name: alvin-api-tls-volume
+      #   secret: 
+      #     secretName: alvin-api-tls
+      #     items:
+      #     - key: tls.crt
+      #       path: nginx.crt
+      #     - key: tls.key
+      #       path: nginx.key  
+      # - name: houston-api-tls-volume
+      #   secret: 
+      #     secretName: houston-api-tls
+      #     items:
+      #     - key: tls.crt
+      #       path: nginx.crt
+      #     - key: tls.key
+      #       path: nginx.key               
+      # {{- end }}
 
       {{- if ne .Values.firebaseServiceAccount "" }} 
       - name: firebase-service-account
         emptyDir: {}
       {{- end }}  
-
+      
+      ## Start of inti containers
+      initContainers:
+        - name: "init-downloader"
+          image: "google/cloud-sdk:latest"
+          command: ['sh', '-c', 'gsutil cp {{ .Values.prime.configDataBucket }}/*.* /config-data/']
+          volumeMounts:
+          - name: config-data
+            mountPath: /config-data/
       # init container used to write firbase secret into a shared pod volume
       # This init container is only activated if firebaseServiceAccount is not empty
        {{- if ne .Values.firebaseServiceAccount "" }} 
-      initContainers:
-        - name: firbase-secret
+        - name: firebase-secret
           image: busybox
           args: 
             - /bin/sh
@@ -97,7 +132,7 @@ spec:
           - name: firebase-service-account
             mountPath: "/secret"
        {{- end }}    
-      # End of init containers  
+      ## End of init containers  
       containers:
       ## Start of ocs-esp container 
       {{- if .Values.ocsEsp.enabled }}
@@ -105,8 +140,9 @@ spec:
         image: {{ .Values.esp.image }}:{{ .Values.esp.tag }}
         imagePullPolicy: {{ .Values.esp.pullPolicy }}
         args: [
-          "--http2_port=9000",
-          "--ssl_port=8443",
+          {{- range $k, $v := .Values.ocsEsp.ports }}
+          "--{{ $k }}={{ $v }}",
+          {{- end }}
           "--status_port=8090",
           "--service={{ .Values.ocsEsp.endpointAddress }}",
           "--rollout_strategy=managed",
@@ -121,8 +157,8 @@ spec:
         {{- end }}
         {{- if .Values.ocsEsp.ports }}
         ports:
-          {{- range .Values.ocsEsp.ports }}
-        - containerPort: {{ . }}
+          {{- range $k, $v := .Values.ocsEsp.ports }}
+        - containerPort: {{ $v }}
           {{- end }}
         {{- end }}
         volumeMounts:
@@ -132,11 +168,11 @@ spec:
           readOnly: true
         {{- end }} 
 
-        {{- if .Values.certs.enabled }}
-        - mountPath: /etc/nginx/ssl
-          name: ocs-tls-volume
-          readOnly: true
-        {{- end }}
+        # {{- if .Values.certs.enabled }}
+        # - mountPath: /etc/nginx/ssl
+        #   name: ocs-tls-volume
+        #   readOnly: true
+        # {{- end }}
 
       {{- end }}    
       ## End of ocs-esp container 
@@ -146,8 +182,9 @@ spec:
         image: {{ .Values.esp.image }}:{{ .Values.esp.tag }}
         imagePullPolicy: {{ .Values.esp.pullPolicy }}
         args: [
-          "--http2_port=9002",
-          "--ssl_port", "443",
+          {{- range $k, $v := .Values.apiEsp.ports }}
+          "--{{ $k }}={{ $v }}",
+          {{- end }}
           "--status_port=8092",
           "--service={{ .Values.apiEsp.endpointAddress }}",
           "--rollout_strategy=managed",
@@ -162,8 +199,8 @@ spec:
         {{- end }}
         {{- if .Values.apiEsp.ports }}
         ports:
-          {{- range .Values.apiEsp.ports }}
-        - containerPort: {{ . }}
+          {{- range $k, $v := .Values.apiEsp.ports }}
+        - containerPort: {{ $v }}
           {{- end }}
         {{- end }}
         volumeMounts:
@@ -173,11 +210,11 @@ spec:
           readOnly: true
         {{- end }} 
 
-        {{- if .Values.certs.enabled }}
-        - mountPath: /etc/nginx/ssl
-          name: api-tls-volume
-          readOnly: true
-        {{- end }} 
+        # {{- if .Values.certs.enabled }}
+        # - mountPath: /etc/nginx/ssl
+        #   name: api-tls-volume
+        #   readOnly: true
+        # {{- end }} 
       {{- end }}
       ## End of api-esp container 
       ## Start of metrics-esp container 
@@ -186,8 +223,9 @@ spec:
         image: {{ .Values.esp.image }}:{{ .Values.esp.tag }}
         imagePullPolicy: {{ .Values.esp.pullPolicy }}
         args: [
-          "--http2_port=9004",
-          "--ssl_port", "9443",
+          {{- range $k, $v := .Values.metricsEsp.ports }}
+          "--{{ $k }}={{ $v }}",
+          {{- end }}
           "--status_port=8094",
           "--service={{ .Values.metricsEsp.endpointAddress }}",
           "--rollout_strategy=managed",
@@ -202,8 +240,8 @@ spec:
         {{- end }}
         {{- if .Values.metricsEsp.ports }}
         ports:
-          {{- range .Values.metricsEsp.ports }}
-        - containerPort: {{ . }}
+          {{- range $k, $v := .Values.metricsEsp.ports }}
+        - containerPort: {{ $v }}
           {{- end }}
         {{- end }}
         volumeMounts:
@@ -213,13 +251,95 @@ spec:
           readOnly: true
         {{- end }}  
 
-        {{- if .Values.certs.enabled }}
-        - mountPath: /etc/nginx/ssl
-          name: metrics-tls-volume
-          readOnly: true
-        {{- end }}
+        # {{- if .Values.certs.enabled }}
+        # - mountPath: /etc/nginx/ssl
+        #   name: metrics-tls-volume
+        #   readOnly: true
+        # {{- end }}
       {{- end }}
       ## End of metrics-esp container 
+      ## Start of alvin-api-esp container 
+      {{- if .Values.alvinApiEsp.enabled }}
+      - name: alvin-api-esp
+        image: {{ .Values.esp.image }}:{{ .Values.esp.tag }}
+        imagePullPolicy: {{ .Values.esp.pullPolicy }}
+        args: [
+          {{- range $k, $v := .Values.alvinApiEsp.ports }}
+          "--{{ $k }}={{ $v }}",
+          {{- end }}
+          "--status_port=8097",
+          "--service={{ .Values.alvinApiEsp.endpointAddress }}",
+          "--rollout_strategy=managed",
+          "--backend=127.0.0.1:8080"
+        ]
+        {{- if .Values.alvinApiEsp.env }}
+          env: 
+            {{- range $key, $value := .Values.alvinApiEsp.env }}
+          - name: {{ $key }}
+            value: {{ $value | quote }}
+            {{- end }}
+        {{- end }}
+        {{- if .Values.alvinApiEsp.ports }}
+        ports:
+          {{- range $k, $v := .Values.alvinApiEsp.ports }}
+        - containerPort: {{ $v }}
+          {{- end }}
+        {{- end }}
+        volumeMounts:
+        {{- range .Values.alvinApiEsp.secrets }}
+        - mountPath: {{ .containerMountPath }}
+          name: {{ .secretName }}-alvin-api
+          readOnly: true
+        {{- end }}  
+
+        # {{- if .Values.certs.enabled }}
+        # - mountPath: /etc/nginx/ssl
+        #   name: alvin-api-tls-volume
+        #   readOnly: true
+        # {{- end }}
+      {{- end }}
+      ## End of alvin-api-esp container 
+      ## Start of houston-api-esp container 
+      {{- if .Values.houstonApiEsp.enabled }}
+      - name: houston-api-esp
+        image: {{ .Values.esp.image }}:{{ .Values.esp.tag }}
+        imagePullPolicy: {{ .Values.esp.pullPolicy }}
+        args: [
+          {{- range $k, $v := .Values.houstonApiEsp.ports }}
+          "--{{ $k }}={{ $v }}",
+          {{- end }}
+          "--status_port=8095",
+          "--service={{ .Values.houstonApiEsp.endpointAddress }}",
+          "--rollout_strategy=managed",
+          "--backend=127.0.0.1:8080"
+        ]
+        {{- if .Values.houstonApiEsp.env }}
+          env: 
+            {{- range $key, $value := .Values.houstonApiEsp.env }}
+          - name: {{ $key }}
+            value: {{ $value | quote }}
+            {{- end }}
+        {{- end }}
+        {{- if .Values.houstonApiEsp.ports }}
+        ports:
+          {{- range $k, $v := .Values.houstonApiEsp.ports }}
+        - containerPort: {{ $v }}
+          {{- end }}
+        {{- end }}
+        volumeMounts:
+        {{- range .Values.houstonApiEsp.secrets }}
+        - mountPath: {{ .containerMountPath }}
+          name: {{ .secretName }}-houston-api
+          readOnly: true
+        {{- end }}  
+
+        # {{- if .Values.certs.enabled }}
+        # - mountPath: /etc/nginx/ssl
+        #   name: houston-api-tls-volume
+        #   readOnly: true
+        # {{- end }}
+      {{- end }}
+      ## End of houston-api-esp container 
       ## Start of prime container  
       - name: prime
         image: "{{ .Values.prime.image }}:{{ .Values.prime.tag }}"
@@ -232,6 +352,9 @@ spec:
           {{- end }}
         {{- end }}
         volumeMounts:
+        - name: config-data
+          mountPath: "/config-data"
+          readOnly: true
         {{- if ne .Values.firebaseServiceAccount "" }}
         - name: firebase-service-account
           mountPath: "/secret"
@@ -273,4 +396,455 @@ spec:
       tolerations:
 {{ toYaml . | indent 8 }}
     {{- end }}
+---
 
+{{- if .Values.canary }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ template "prime.fullname" . }}-canary
+  labels:
+    app: {{ template "prime.name" . }}
+    chart: {{ template "prime.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+    tier: backend
+    track: canary
+  {{- if .Values.canary.annotations }}  
+  annotations: 
+{{ toYaml .Values.canary.annotations | indent 4 }}
+  {{- else if .Values.prime.annotations }}
+  annotations: 
+{{ toYaml .Values.prime.annotations | indent 4 }}
+  {{- end }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ template "prime.name" . }}
+      release: {{ .Release.Name }}
+      tier: backend
+      track: canary
+  template:
+    metadata:
+      labels:
+        app: {{ template "prime.name" . }}
+        release: {{ .Release.Name }}
+        tier: backend
+        track: canary
+    spec:
+      volumes:
+      - name: config-data
+        emptyDir: {}
+      {{- if .Values.canary.secrets }}
+        {{- range .Values.canary.secrets }}
+      - name: {{ .secretName }}-prime
+        secret: 
+          secretName: {{ .secretName }}
+        {{- end }}
+      {{- else if .Values.prime.secrets }}
+        {{- range .Values.prime.secrets }}
+      - name: {{ .secretName }}-prime
+        secret: 
+          secretName: {{ .secretName }}
+        {{- end }}
+      {{- end }}
+      {{- range .Values.ocsEsp.secrets }}
+      - name: {{ .secretName }}-ocs
+        secret: 
+          secretName: {{ .secretName }}
+      {{- end }}
+      {{- range .Values.apiEsp.secrets }}
+      - name: {{ .secretName }}-api
+        secret: 
+          secretName: {{ .secretName }}
+      {{- end }}
+      {{- range .Values.metricsEsp.secrets }}
+      - name: {{ .secretName }}-metrics
+        secret: 
+          secretName: {{ .secretName }}
+      {{- end }}
+      {{- range .Values.alvinApiEsp.secrets }}
+      - name: {{ .secretName }}-alvin-api
+        secret: 
+          secretName: {{ .secretName }}
+      {{- end }}
+      {{- range .Values.houstonApiEsp.secrets }}
+      - name: {{ .secretName }}-houston-api
+        secret: 
+          secretName: {{ .secretName }}
+      {{- end }}
+      
+      # {{- if .Values.certs.enabled }}
+      # - name: api-tls-volume
+      #   secret: 
+      #     secretName: api-tls
+      #     items:
+      #     - key: tls.crt
+      #       path: nginx.crt
+      #     - key: tls.key
+      #       path: nginx.key  
+      # - name: ocs-tls-volume
+      #   secret: 
+      #     secretName: ocs-tls 
+      #     items:
+      #     - key: tls.crt
+      #       path: nginx.crt
+      #     - key: tls.key
+      #       path: nginx.key    
+      # - name: metrics-tls-volume
+      #   secret: 
+      #     secretName: metrics-tls
+      #     items:
+      #     - key: tls.crt
+      #       path: nginx.crt
+      #     - key: tls.key
+      #       path: nginx.key  
+      # - name: alvin-api-tls-volume
+      #   secret: 
+      #     secretName: alvin-api-tls
+      #     items:
+      #     - key: tls.crt
+      #       path: nginx.crt
+      #     - key: tls.key
+      #       path: nginx.key  
+      # - name: houston-api-tls-volume
+      #   secret: 
+      #     secretName: houston-api-tls
+      #     items:
+      #     - key: tls.crt
+      #       path: nginx.crt
+      #     - key: tls.key
+      #       path: nginx.key               
+      # {{- end }}
+
+      {{- if ne .Values.firebaseServiceAccount "" }} 
+      - name: firebase-service-account
+        emptyDir: {}
+      {{- end }}  
+
+      ## Start of inti containers
+      initContainers:
+        - name: "init-downloader"
+          image: "google/cloud-sdk:latest"
+          command: ['sh', '-c', 'gsutil cp {{ .Values.prime.configDataBucket }}/*.* /config-data/']
+          volumeMounts:
+          - name: config-data
+            mountPath: /config-data/
+      # init container used to write firbase secret into a shared pod volume
+      # This init container is only activated if firebaseServiceAccount is not empty
+       {{- if ne .Values.firebaseServiceAccount "" }} 
+        - name: firebase-secret
+          image: busybox
+          args: 
+            - /bin/sh
+            - -c
+            - echo $FIREBASE_SERVICE_ACCOUNT | base64 -d > /secret/pantel-prod.json
+          env:
+          - name: FIREBASE_SERVICE_ACCOUNT
+            value: {{ .Values.firebaseServiceAccount }}
+          volumeMounts:
+          - name: firebase-service-account
+            mountPath: "/secret"
+       {{- end }}    
+      ## End of init containers  
+      containers:
+      ## Start of ocs-esp container 
+      {{- if .Values.ocsEsp.enabled }}
+      - name: ocs-esp
+        image: {{ .Values.esp.image }}:{{ .Values.esp.tag }}
+        imagePullPolicy: {{ .Values.esp.pullPolicy }}
+        args: [
+          {{- range $k, $v := .Values.ocsEsp.ports }}
+          "--{{ $k }}={{ $v }}",
+          {{- end }}
+          "--status_port=8090",
+          "--service={{ .Values.ocsEsp.endpointAddress }}",
+          "--rollout_strategy=managed",
+          "--backend=grpc://127.0.0.1:8082"
+        ]
+        {{- if .Values.ocsEsp.env }}
+          env: 
+            {{- range $key, $value := .Values.ocsEsp.env }}
+          - name: {{ $key }}
+            value: {{ $value | quote }}
+            {{- end }}
+        {{- end }}
+        {{- if .Values.ocsEsp.ports }}
+        ports:
+          {{- range $k, $v := .Values.ocsEsp.ports }}
+        - containerPort: {{ $v }}
+          {{- end }}
+        {{- end }}
+        volumeMounts:
+        {{- range .Values.ocsEsp.secrets }}
+        - mountPath: {{ .containerMountPath }}
+          name: {{ .secretName }}-ocs
+          readOnly: true
+        {{- end }} 
+
+        # {{- if .Values.certs.enabled }}
+        # - mountPath: /etc/nginx/ssl
+        #   name: ocs-tls-volume
+        #   readOnly: true
+        # {{- end }}
+
+      {{- end }}    
+      ## End of ocs-esp container 
+      ## Start of api-esp container 
+      {{- if .Values.apiEsp.enabled }}
+      - name: api-esp
+        image: {{ .Values.esp.image }}:{{ .Values.esp.tag }}
+        imagePullPolicy: {{ .Values.esp.pullPolicy }}
+        args: [
+          {{- range $k, $v := .Values.apiEsp.ports }}
+          "--{{ $k }}={{ $v }}",
+          {{- end }}
+          "--status_port=8092",
+          "--service={{ .Values.apiEsp.endpointAddress }}",
+          "--rollout_strategy=managed",
+          "--backend=127.0.0.1:8080"
+        ]
+        {{- if .Values.apiEsp.env }}
+          env: 
+            {{- range $key, $value := .Values.apiEsp.env }}
+          - name: {{ $key }}
+            value: {{ $value | quote }}
+            {{- end }}
+        {{- end }}
+        {{- if .Values.apiEsp.ports }}
+        ports:
+         {{- range $k, $v := .Values.apiEsp.ports }}
+        - containerPort: {{ $v }}
+          {{- end }}
+        {{- end }}
+        volumeMounts:
+        {{- range .Values.apiEsp.secrets }}
+        - mountPath: {{ .containerMountPath }}
+          name: {{ .secretName }}-api
+          readOnly: true
+        {{- end }} 
+
+        # {{- if .Values.certs.enabled }}
+        # - mountPath: /etc/nginx/ssl
+        #   name: api-tls-volume
+        #   readOnly: true
+        # {{- end }} 
+      {{- end }}
+      ## End of api-esp container 
+      ## Start of metrics-esp container 
+      {{- if .Values.metricsEsp.enabled }}
+      - name: metrics-esp
+        image: {{ .Values.esp.image }}:{{ .Values.esp.tag }}
+        imagePullPolicy: {{ .Values.esp.pullPolicy }}
+        args: [
+          {{- range $k, $v := .Values.metricsEsp.ports }}
+          "--{{ $k }}={{ $v }}",
+          {{- end }}
+          "--status_port=8094",
+          "--service={{ .Values.metricsEsp.endpointAddress }}",
+          "--rollout_strategy=managed",
+          "--backend=127.0.0.1:8083"
+        ]
+        {{- if .Values.metricsEsp.env }}
+          env: 
+            {{- range $key, $value := .Values.metricsEsp.env }}
+          - name: {{ $key }}
+            value: {{ $value | quote }}
+            {{- end }}
+        {{- end }}
+        {{- if .Values.metricsEsp.ports }}
+        ports:
+          {{- range $k, $v := .Values.metricsEsp.ports }}
+        - containerPort: {{ $v }}
+          {{- end }}
+        {{- end }}
+        volumeMounts:
+        {{- range .Values.metricsEsp.secrets }}
+        - mountPath: {{ .containerMountPath }}
+          name: {{ .secretName }}-metrics
+          readOnly: true
+        {{- end }}  
+
+        # {{- if .Values.certs.enabled }}
+        # - mountPath: /etc/nginx/ssl
+        #   name: metrics-tls-volume
+        #   readOnly: true
+        # {{- end }}
+      {{- end }}
+      ## End of metrics-esp container 
+      ## Start of alvin-api-esp container 
+      {{- if .Values.alvinApiEsp.enabled }}
+      - name: alvin-api-esp
+        image: {{ .Values.esp.image }}:{{ .Values.esp.tag }}
+        imagePullPolicy: {{ .Values.esp.pullPolicy }}
+        args: [
+          {{- range $k, $v := .Values.alvinApiEsp.ports }}
+          "--{{ $k }}={{ $v }}",
+          {{- end }}
+          "--status_port=8097",
+          "--service={{ .Values.alvinApiEsp.endpointAddress }}",
+          "--rollout_strategy=managed",
+          "--backend=127.0.0.1:8080"
+        ]
+        {{- if .Values.alvinApiEsp.env }}
+          env: 
+            {{- range $key, $value := .Values.alvinApiEsp.env }}
+          - name: {{ $key }}
+            value: {{ $value | quote }}
+            {{- end }}
+        {{- end }}
+        {{- if .Values.alvinApiEsp.ports }}
+        ports:
+          {{- range $k, $v := .Values.alvinApiEsp.ports }}
+        - containerPort: {{ $v }}
+          {{- end }}
+        {{- end }}
+        volumeMounts:
+        {{- range .Values.alvinApiEsp.secrets }}
+        - mountPath: {{ .containerMountPath }}
+          name: {{ .secretName }}-alvin-api
+          readOnly: true
+        {{- end }}  
+
+        # {{- if .Values.certs.enabled }}
+        # - mountPath: /etc/nginx/ssl
+        #   name: alvin-api-tls-volume
+        #   readOnly: true
+        # {{- end }}
+      {{- end }}
+      ## End of alvin-api-esp container 
+      ## Start of houston-api-esp container 
+      {{- if .Values.houstonApiEsp.enabled }}
+      - name: houston-api-esp
+        image: {{ .Values.esp.image }}:{{ .Values.esp.tag }}
+        imagePullPolicy: {{ .Values.esp.pullPolicy }}
+        args: [
+          {{- range $k, $v := .Values.houstonApiEsp.ports }}
+          "--{{ $k }}={{ $v }}",
+          {{- end }}
+          "--status_port=8095",
+          "--service={{ .Values.houstonApiEsp.endpointAddress }}",
+          "--rollout_strategy=managed",
+          "--backend=127.0.0.1:8080"
+        ]
+        {{- if .Values.houstonApiEsp.env }}
+          env: 
+            {{- range $key, $value := .Values.houstonApiEsp.env }}
+          - name: {{ $key }}
+            value: {{ $value | quote }}
+            {{- end }}
+        {{- end }}
+        {{- if .Values.houstonApiEsp.ports }}
+        ports:
+          {{- range $k, $v := .Values.houstonApiEsp.ports }}
+        - containerPort: {{ $v }}
+          {{- end }}
+        {{- end }}
+        volumeMounts:
+        {{- range .Values.houstonApiEsp.secrets }}
+        - mountPath: {{ .containerMountPath }}
+          name: {{ .secretName }}-houston-api
+          readOnly: true
+        {{- end }}  
+
+        # {{- if .Values.certs.enabled }}
+        # - mountPath: /etc/nginx/ssl
+        #   name: houston-api-tls-volume
+        #   readOnly: true
+        # {{- end }}
+      {{- end }}
+      ## End of houston-api-esp container 
+      ## Start of prime container  
+      - name: prime
+        image: "{{ .Values.canary.image | default .Values.prime.image  }}:{{ .Values.canary.tag | default .Values.prime.tag }}"
+        imagePullPolicy: {{ .Values.canary.pullPolicy | default .Values.prime.pullPolicy }}
+        {{- if .Values.canary.env }}
+        env: 
+          {{- range $key, $value := .Values.canary.env }}
+        - name: {{ $key }}
+          value: {{ $value | quote }}
+          {{- end }}
+        {{- else if .Values.prime.env }}
+        env: 
+          {{- range $key, $value := .Values.prime.env }}
+        - name: {{ $key }}
+          value: {{ $value | quote }}
+          {{- end }}
+        {{- end }}
+        volumeMounts:
+        - name: config-data
+          mountPath: "/config-data"
+          readOnly: true
+        {{- if ne .Values.firebaseServiceAccount "" }}
+        - name: firebase-service-account
+          mountPath: "/secret"
+          readOnly: true
+        {{- end }} 
+        {{- if .Values.canary.secrets }} 
+          {{- range .Values.canary.secrets }}
+        - name: {{ .secretName }}-prime
+          mountPath: {{ .containerMountPath }}
+          readOnly: true
+          {{- end }}
+        {{- else if .Values.prime.secrets }}
+          {{- range .Values.prime.secrets }}
+        - name: {{ .secretName }}-prime
+          mountPath: {{ .containerMountPath }}
+          readOnly: true
+          {{- end }}
+        {{- end }}  
+        ports: 
+        {{- if .Values.canary.ports }} 
+          {{- range .Values.canary.ports }}
+        - containerPort: {{ . }}
+          {{- end }} 
+        {{- else if .Values.prime.ports }}
+          {{- range .Values.prime.ports }}
+        - containerPort: {{ . }}
+          {{- end }}  
+        {{- end }} 
+        {{- if .Values.canary.livenessProbe }}
+        livenessProbe:
+          httpGet:
+            path: {{ .Values.canary.livenessProbe.path }}
+            port: {{ .Values.canary.livenessProbe.port }}
+        {{- else if .Values.prime.livenessProbe }}
+        livenessProbe:
+          httpGet:
+            path: {{ .Values.prime.livenessProbe.path }}
+            port: {{ .Values.prime.livenessProbe.port }}
+        {{- end }}  
+        {{- if .Values.canary.readinessProbe }}
+        readinessProbe:
+          httpGet:
+            path: {{ .Values.canary.readinessProbe.path }}
+            port: {{ .Values.canary.readinessProbe.port }}
+        {{- else if .Values.prime.readinessProbe }}  
+        readinessProbe:
+          httpGet:
+            path: {{ .Values.prime.readinessProbe.path }}
+            port: {{ .Values.prime.readinessProbe.port }}
+         {{- end }}      
+        resources:
+        {{- if .Values.prime.resources }}
+{{ toYaml .Values.prime.resources | indent 12 }}
+        {{- else if .Values.canary.resources }}
+{{ toYaml .Values.canary.resources | indent 12 }}  
+         {{- end }}      
+        ## End of prime container 
+    {{- with .Values.nodeSelector }}
+      nodeSelector:
+{{ toYaml . | indent 8 }}
+    {{- end }}
+    {{- with .Values.affinity }}
+      affinity:
+{{ toYaml . | indent 8 }}
+    {{- end }}
+    {{- with .Values.tolerations }}
+      tolerations:
+{{ toYaml . | indent 8 }}
+    {{- end }}
+
+
+{{- end }}

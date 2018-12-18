@@ -7,9 +7,10 @@ firebaseServiceAccount: ""
   
 
 prime:
-  image: gcr.io/pi-ostelco-dev/prime
+  image: eu.gcr.io/pi-ostelco-dev/prime
   tag: 8d6884cfb
   pullPolicy: Always
+  configDataBucket: "gs://pi-ostelco-dev-prime-files/dev"
   env: 
     FIREBASE_ROOT_PATH: dev
     NEO4J_HOST: neo4j-neo4j.neo4j.svc.cluster.local
@@ -41,6 +42,45 @@ prime:
     prometheus.io/path: '/prometheus-metrics'
     prometheus.io/port: '8081'  
 
+canary: {}
+  # weight: 25 # either set the weight or headers below. If both are set, only headers will be used.
+  # headers: # only route requests with these headers to canary
+  #   x-mode: canary
+  # canaryMetricsHost: canary-metrics.dev.ostelco.org
+  # image: gcr.io/pi-ostelco-dev/prime
+  # tag: 8d6884cfb
+  # pullPolicy: Always
+  # env: 
+  #   FIREBASE_ROOT_PATH: dev
+  #   NEO4J_HOST: neo4j-neo4j.neo4j.svc.cluster.local
+  #   STRIPE_API_KEY: ""
+  # ports:
+  #   - 8080
+  #   - 8081
+  #   - 8082 
+  #   - 8083 
+  # resources: {}
+  # # We usually recommend not to specify default resources and to leave this as a conscious
+  # # choice for the user. This also increases chances charts run on environments with little
+  # # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  # # limits:
+  # #  cpu: 100m
+  # #  memory: 128Mi
+  # # requests:
+  # #  cpu: 100m
+  # #  memory: 128Mi  
+  # livenessProbe: {}
+  #   # path: /
+  #   # port: 8081
+  # readinessProbe: {}
+  #   # path: /
+  #   # port: 8081  
+  # annotations: 
+  #   prometheus.io/scrape: 'true'
+  #   prometheus.io/path: '/prometheus-metrics'
+  #   prometheus.io/port: '8081'
+
 esp:
   image: gcr.io/endpoints-release/endpoints-runtime
   tag: 1
@@ -51,8 +91,8 @@ ocsEsp:
   env: {}
   endpointAddress: ocs.dev.ostelco.org
   ports:
-    - 9000
-    - 8443
+    http2_port: 9000
+    #ssl_port: 8443
   # secrets: 
   #   - secretName: ocs-ostelco-ssl
   #     containerMountPath: /etc/nginx/ssl 
@@ -62,8 +102,8 @@ apiEsp:
   env: {}
   endpointAddress: api.dev.ostelco.org
   ports:
-    - 9002
-    - 443
+    http2_port: 9002
+    #ssl_port: 443
   # secrets: 
   #   - secretName: api-ostelco-ssl
   #     containerMountPath: /etc/nginx/ssl 
@@ -73,34 +113,89 @@ metricsEsp:
   env: {}
   endpointAddress: metrics.dev.ostelco.org
   ports:
-    - 9004
-    - 9443
+    http2_port: 9004
+    #ssl_port: 9443
   # secrets: 
   #   - secretName: metrics-ostelco-ssl
   #     containerMountPath: /etc/nginx/ssl   
 
+alvinApiEsp:
+  enabled: true
+  env: {}  
+  endpointAddress: alvin-api.dev.ostelco.org
+  ports:
+    http_port: 9008
+    #ssl_port: 6443
+  # secrets: 
+  #   - secretName: api-ostelco-ssl
+  #     containerMountPath: /etc/nginx/ssl
+
+houstonApiEsp:
+  enabled: true
+  env: {}  
+  endpointAddress: houston-api.dev.ostelco.org
+  ports:
+    http_port: 9006
+    #ssl_port: 7443
+  # secrets: 
+  #   - secretName: api-ostelco-ssl
+  #     containerMountPath: /etc/nginx/ssl
+
 services:
-  prime:
-    name: prime-service
-    type: LoadBalancer
+  ocs:
+    name: prime-ocs
+    type: ClusterIP
     port: 443
     targetPort: 8443
     portName: grpc 
+    host: ocs.dev.ostelco.org
+    grpcOrHttp2: true
    # loadBalancerIP: x.y.z.n
   api:
     name: prime-api
-    type: LoadBalancer
+    type: ClusterIP
     port: 443
     targetPort: 443
     portName: https
+    host: api.dev.ostelco.org
+    grpcOrHttp2: true
     # loadBalancerIP: x.y.z.n
   metrics: 
     name: prime-metrics
-    type: LoadBalancer
+    type: ClusterIP
     port: 443
     targetPort: 9443  
     portName: grpc
+    host: metrics.dev.ostelco.org
+    grpcOrHttp2: true
     # loadBalancerIP: x.y.z.n
+  # prime-houston-api: 
+  #   name: prime-houston-api
+  #   type: ClusterIP
+  #   port: 443
+  #   targetPort: 7443  
+  #   portName: https
+  #   host: houston-api.dev.ostelco.org
+  #   grpcOrhttp2: false        
+    # loadBalancerIP: x.y.z.n
+  prime-alvin-api: 
+    name: prime-alvin-api
+    type: ClusterIP
+    port: 443
+    targetPort: 6443  
+    portName: https
+    host: alvin-api.dev.ostelco.org
+    grpcOrHttp2: false
+    # loadBalancerIP: x.y.z.n  
+  pseudonym-server: 
+    name: pseudonym-server
+    type: ClusterIP
+    port: 80
+    targetPort: 8080  
+    portName: http
+    host: ps.dev.ostelco.org
+    grpcOrHttp2: false
+    # loadBalancerIP: x.y.z.n  
 
 ingress:
   enabled: false
@@ -119,12 +214,19 @@ certs:
   enabled: false
   dnsProvider: dev-clouddns
   issuer: letsencrypt-staging # or letsencrypt-production
-  apiDns: []
-   # - api.ostelco.org
-  ocsDns: []
-   # - ocs.ostelco.org
-  metricsDns: []
-   # - metrics.ostelco.org  
+  tlsSecretName: new-dev-ostelco-tls
+  hosts:
+    - '*.new.dev.ostelco.org'
+  # apiDns: []
+  #  # - api.ostelco.org
+  # ocsDns: []
+  #  # - ocs.ostelco.org
+  # metricsDns: []
+  #  # - metrics.ostelco.org 
+  # alvinDns: []
+  #  # - alvin-api.ostelco.org
+  # houstonDns: []  
+  #  # - houston-api.ostelco.org
 
 disruptionBudget: 
   enabled: false

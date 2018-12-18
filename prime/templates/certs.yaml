@@ -1,67 +1,112 @@
-{{- if .Values.certs.enabled -}}
+{{- if .Values.certs.enabled }}
 apiVersion: certmanager.k8s.io/v1alpha1
 kind: Certificate
 metadata:
-  name: {{ template "prime.fullname" . }}-api-crt
+  name: {{ template "prime.fullname" . }}-wildcard-crt
 spec:
-  secretName: api-tls
+  secretName: {{ .Values.certs.tlsSecretName }}
   dnsNames:
-  {{- range .Values.certs.apiDns }}
-  - {{ . }}
+  {{- range .Values.certs.hosts }}
+  - {{ . | quote }}
   {{- end }}
   issuerRef:
     name: {{ .Values.certs.issuer }}
     kind: ClusterIssuer
+  commonName: {{ .Values.certs.hosts | first | quote }}  
   acme:
     config:
     - dns01:
         provider: {{ .Values.certs.dnsProvider }}
       domains:
-      {{- range .Values.certs.apiDns }}
-      - {{ . }}
+      {{- range .Values.certs.hosts }}
+       - {{ . | quote }}
       {{- end }}
----
-apiVersion: certmanager.k8s.io/v1alpha1
-kind: Certificate
-metadata:
-  name: {{ template "prime.fullname" . }}-ocs-crt
-spec:
-  secretName: ocs-tls
-  dnsNames:
-  {{- range .Values.certs.ocsDns }}
-  - {{ . }}
-  {{- end }}
-  issuerRef:
-    name: {{ .Values.certs.issuer }}
-    kind: ClusterIssuer
-  acme:
-    config:
-    - dns01:
-        provider: {{ .Values.certs.dnsProvider }}
-      domains:
-      {{- range .Values.certs.ocsDns }}
-      - {{ . }}
-      {{- end }} 
----
-apiVersion: certmanager.k8s.io/v1alpha1
-kind: Certificate
-metadata:
-  name: {{ template "prime.fullname" . }}-metrics-crt
-spec:
-  secretName: metrics-tls
-  dnsNames:
-  {{- range .Values.certs.metricsDns }}
-  - {{ . }}
-  {{- end }}
-  issuerRef:
-    name: {{ .Values.certs.issuer }}
-    kind: ClusterIssuer
-  acme:
-    config:
-    - dns01:
-        provider: {{ .Values.certs.dnsProvider }}
-      domains:
-      {{- range .Values.certs.metricsDns }}
-      - {{ . }}
-      {{- end }}      
-{{- end -}}
+# ---
+# apiVersion: certmanager.k8s.io/v1alpha1
+# kind: Certificate
+# metadata:
+#   name: {{ template "prime.fullname" . }}-ocs-crt
+# spec:
+#   secretName: ocs-tls
+#   dnsNames:
+#   {{- range .Values.certs.ocsDns }}
+#   - {{ . }}
+#   {{- end }}
+#   issuerRef:
+#     name: {{ .Values.certs.issuer }}
+#     kind: ClusterIssuer
+#   acme:
+#     config:
+#     - dns01:
+#         provider: {{ .Values.certs.dnsProvider }}
+#       domains:
+#       {{- range .Values.certs.ocsDns }}
+#       - {{ . }}
+#       {{- end }} 
+# ---
+# apiVersion: certmanager.k8s.io/v1alpha1
+# kind: Certificate
+# metadata:
+#   name: {{ template "prime.fullname" . }}-metrics-crt
+# spec:
+#   secretName: metrics-tls
+#   dnsNames:
+#   {{- range .Values.certs.metricsDns }}
+#   - {{ . }}
+#   {{- end }}
+#   issuerRef:
+#     name: {{ .Values.certs.issuer }}
+#     kind: ClusterIssuer
+#   acme:
+#     config:
+#     - dns01:
+#         provider: {{ .Values.certs.dnsProvider }}
+#       domains:
+#       {{- range .Values.certs.metricsDns }}
+#       - {{ . }}
+#       {{- end }}      
+# ---
+# apiVersion: certmanager.k8s.io/v1alpha1
+# kind: Certificate
+# metadata:
+#   name: {{ template "prime.fullname" . }}-alvin-api-crt
+# spec:
+#   secretName: alvin-api-tls
+#   dnsNames:
+#   {{- range .Values.certs.alvinDns }}
+#   - {{ . }}
+#   {{- end }}
+#   issuerRef:
+#     name: {{ .Values.certs.issuer }}
+#     kind: ClusterIssuer
+#   acme:
+#     config:
+#     - dns01:
+#         provider: {{ .Values.certs.dnsProvider }}
+#       domains:
+#       {{- range .Values.certs.alvinDns }}
+#       - {{ . }}
+#       {{- end }}      
+# ---
+# apiVersion: certmanager.k8s.io/v1alpha1
+# kind: Certificate
+# metadata:
+#   name: {{ template "prime.fullname" . }}-houston-api-crt
+# spec:
+#   secretName: houston-api-tls
+#   dnsNames:
+#   {{- range .Values.certs.houstonDns }}
+#   - {{ . }}
+#   {{- end }}
+#   issuerRef:
+#     name: {{ .Values.certs.issuer }}
+#     kind: ClusterIssuer
+#   acme:
+#     config:
+#     - dns01:
+#         provider: {{ .Values.certs.dnsProvider }}
+#       domains:
+#       {{- range .Values.certs.houstonDns }}
+#       - {{ . }}
+#       {{- end }}            
+{{- end -}}      
