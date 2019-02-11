@@ -1,15 +1,20 @@
+{{- if .Values.canary }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ template "prime.fullname" . }}
+  name: {{ template "prime.fullname" . }}-canary
   labels:
-    app: {{ template "prime.name" . }}
+    app: {{ template "prime.name" . }}-canary
     chart: {{ template "prime.chart" . }}
     release: {{ .Release.Name }}
     heritage: {{ .Release.Service }}
     tier: backend
-    tag: {{ .Values.prime.tag }}
-  {{- if .Values.prime.annotations }}  
+    track: canary
+    tag: {{ .Values.canary.tag }}
+  {{- if .Values.canary.annotations }}  
+  annotations: 
+{{ toYaml .Values.canary.annotations | indent 4 }}
+  {{- else if .Values.prime.annotations }}
   annotations: 
 {{ toYaml .Values.prime.annotations | indent 4 }}
   {{- end }}
@@ -17,23 +22,33 @@ spec:
   replicas: {{ .Values.replicaCount }}
   selector:
     matchLabels:
-      app: {{ template "prime.name" . }}
+      app: {{ template "prime.name" . }}-canary
       release: {{ .Release.Name }}
       tier: backend
+      track: canary
   template:
     metadata:
       labels:
-        app: {{ template "prime.name" . }}
+        app: {{ template "prime.name" . }}-canary
         release: {{ .Release.Name }}
         tier: backend
+        track: canary
     spec:
       volumes:
       - name: config-data
         emptyDir: {}
-      {{- range .Values.prime.secrets }}
+      {{- if .Values.canary.secrets }}
+        {{- range .Values.canary.secrets }}
       - name: {{ .secretName }}-prime
         secret: 
           secretName: {{ .secretName }}
+        {{- end }}
+      {{- else if .Values.prime.secrets }}
+        {{- range .Values.prime.secrets }}
+      - name: {{ .secretName }}-prime
+        secret: 
+          secretName: {{ .secretName }}
+        {{- end }}
       {{- end }}
       {{- range .Values.ocsEsp.secrets }}
       - name: {{ .secretName }}-ocs
@@ -85,7 +100,7 @@ spec:
       #     - key: tls.crt
       #       path: nginx.crt
       #     - key: tls.key
-      #       path: nginx.key
+      #       path: nginx.key  
       # - name: alvin-api-tls-volume
       #   secret: 
       #     secretName: alvin-api-tls
@@ -102,8 +117,8 @@ spec:
       #       path: nginx.crt
       #     - key: tls.key
       #       path: nginx.key               
-      # {{- end }}
-      
+      # {{- end }}  
+
       ## Start of inti containers
       initContainers:
         - name: "init-downloader"
@@ -179,7 +194,7 @@ spec:
         {{- end }}
         {{- if .Values.apiEsp.ports }}
         ports:
-          {{- range $k, $v := .Values.apiEsp.ports }}
+         {{- range $k, $v := .Values.apiEsp.ports }}
         - containerPort: {{ $v }}
           {{- end }}
         {{- end }}
@@ -322,50 +337,92 @@ spec:
       ## End of houston-api-esp container 
       ## Start of prime container  
       - name: prime
-        image: "{{ .Values.prime.image }}:{{ .Values.prime.tag }}"
-        imagePullPolicy: {{ .Values.prime.pullPolicy }}
-        {{- if or .Values.prime.env .Values.prime.envFromSecret }}
+        image: "{{ .Values.canary.image | default .Values.prime.image  }}:{{ .Values.canary.tag | default .Values.prime.tag }}"
+        imagePullPolicy: {{ .Values.canary.pullPolicy | default .Values.prime.pullPolicy }}
+        {{- if or (or .Values.canary.env .Values.canary.envFromSecret) (or .Values.prime.env .Values.prime.envFromSecret)  }}
         env: 
         {{- end }}
-        {{- range $key, $value := .Values.prime.env }}
+        {{- if .Values.canary.env }}
+          {{- range $key, $value := .Values.canary.env }}
         - name: {{ $key }}
           value: {{ $value | quote }}
-        {{- end }}
-        {{- range .Values.prime.envFromSecret }}  
+          {{- end }}
+          {{- range .Values.canary.envFromSecret }}  
         - name: {{ .name }}
           valueFrom:
             secretKeyRef:
               name: {{ .secretName }}
               key: {{ .secretKey }}
-        {{- end }}
+          {{- end }}
+        {{- else if .Values.prime.env }}
+          {{- range $key, $value := .Values.prime.env }}
+        - name: {{ $key }}
+          value: {{ $value | quote }}
+          {{- end }}
+          {{- range .Values.prime.envFromSecret }}  
+        - name: {{ .name }}
+          valueFrom:
+            secretKeyRef:
+              name: {{ .secretName }}
+              key: {{ .secretKey }}
+          {{- end }}
+        {{- end }}  
 
         volumeMounts:
         - name: config-data
           mountPath: "/config-data"
           readOnly: true
-        {{- range .Values.prime.secrets }}
+        {{- if .Values.canary.secrets }} 
+          {{- range .Values.canary.secrets }}
         - name: {{ .secretName }}-prime
           mountPath: {{ .containerMountPath }}
           readOnly: true
-        {{- end }}
-        ports:  
-        {{- range .Values.prime.ports }}
+          {{- end }}
+        {{- else if .Values.prime.secrets }}
+          {{- range .Values.prime.secrets }}
+        - name: {{ .secretName }}-prime
+          mountPath: {{ .containerMountPath }}
+          readOnly: true
+          {{- end }}
+        {{- end }}  
+        ports: 
+        {{- if .Values.canary.ports }} 
+          {{- range .Values.canary.ports }}
         - containerPort: {{ . }}
-        {{- end }}   
-        {{- if .Values.prime.livenessProbe }}
+          {{- end }} 
+        {{- else if .Values.prime.ports }}
+          {{- range .Values.prime.ports }}
+        - containerPort: {{ . }}
+          {{- end }}  
+        {{- end }} 
+        {{- if .Values.canary.livenessProbe }}
+        livenessProbe:
+          httpGet:
+            path: {{ .Values.canary.livenessProbe.path }}
+            port: {{ .Values.canary.livenessProbe.port }}
+        {{- else if .Values.prime.livenessProbe }}
         livenessProbe:
           httpGet:
             path: {{ .Values.prime.livenessProbe.path }}
             port: {{ .Values.prime.livenessProbe.port }}
         {{- end }}  
-        {{- if .Values.prime.readinessProbe }}  
+        {{- if .Values.canary.readinessProbe }}
+        readinessProbe:
+          httpGet:
+            path: {{ .Values.canary.readinessProbe.path }}
+            port: {{ .Values.canary.readinessProbe.port }}
+        {{- else if .Values.prime.readinessProbe }}  
         readinessProbe:
           httpGet:
             path: {{ .Values.prime.readinessProbe.path }}
             port: {{ .Values.prime.readinessProbe.port }}
          {{- end }}      
         resources:
+        {{- if .Values.prime.resources }}
 {{ toYaml .Values.prime.resources | indent 12 }}
+        {{- else if .Values.canary.resources }}
+{{ toYaml .Values.canary.resources | indent 12 }}  
+         {{- end }}      
         ## End of prime container 
     {{- with .Values.nodeSelector }}
       nodeSelector:
@@ -379,3 +436,6 @@ spec:
       tolerations:
 {{ toYaml . | indent 8 }}
     {{- end }}
+
+
+{{- end }}

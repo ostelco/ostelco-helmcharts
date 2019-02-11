@@ -8,10 +8,12 @@ metadata:
     chart: {{ template "prime.chart" $ }}
     release: {{ $.Release.Name }}
     heritage: {{ $.Release.Service }}
+    tag: {{ $.Values.prime.tag }}
+  {{- if .host }}  
   annotations:
     getambassador.io/config: |
       ---
-      apiVersion: ambassador/v0
+      apiVersion: ambassador/v1
       kind:  Mapping
       name:  {{ .name }}_mapping
       host:  {{ .host }}
@@ -21,12 +23,13 @@ metadata:
       {{- end }}
       service: {{ $.Release.Name }}-{{ .name }}.{{ $.Release.Namespace }}  
       ---
-      apiVersion: ambassador/v0
+      apiVersion: ambassador/v1
       kind: TLSContext
       name: {{ .name }}_context
       hosts:
       - {{ .host }}
-      secret: {{ $.Values.certs.tlsSecretName }}
+      secret: {{ $.Values.certs.tlsSecretName }}.{{ $.Release.Namespace }}
+  {{- end }}    
 spec:
   type: {{ .type }}
   {{- if and .loadBalancerIP (eq .type "LoadBalancer") }}
@@ -36,7 +39,7 @@ spec:
     - port: {{ .port }}
       targetPort: {{ .targetPort }} 
       protocol: TCP
-      name: {{.portName }}
+      name: {{ .portName }}
   selector:
     app: {{ template "prime.name" $ }}
     release: {{ $.Release.Name }}
@@ -44,8 +47,9 @@ spec:
 ---
 {{- end }}
 
-{{- if .Values.canary }}
-{{- range .Values.services }}
+# canary service
+{{- if and .Values.canary .Values.services.api }}
+{{- with .Values.services.api }}
 apiVersion: v1
 kind: Service
 metadata:
@@ -56,10 +60,11 @@ metadata:
     release: {{ $.Release.Name }}
     heritage: {{ $.Release.Service }}
     track: canary
+    tag: {{ $.Values.canary.tag }}
   annotations:
     getambassador.io/config: |
       --- 
-      apiVersion: ambassador/v0
+      apiVersion: ambassador/v1
       kind: Mapping
       name: {{ .name }}_canary_mapping
       service: {{ $.Release.Name }}-{{ .name }}-canary.{{ $.Release.Namespace }}
@@ -73,36 +78,21 @@ metadata:
         {{ $k }}: {{ $v }}
         {{- end }}
       {{- end }}  
-      {{- if ne .name "prime-metrics" }}
-        {{- if not $.Values.canary.headers }}
+      {{- if not $.Values.canary.headers }}
       weight: {{ $.Values.canary.weight }}  
-        {{- end }}
-      host: {{ .host }}
-      {{-  else }}
-      host: {{ $.Values.canary.canaryMetricsHost }}
-      ---
-      apiVersion: ambassador/v0
-      kind: TLSContext
-      name: {{ .name }}_canary_context
-      hosts:
-      - {{ $.Values.canary.canaryMetricsHost }}
-      secret: {{ $.Values.certs.tlsSecretName }}
       {{- end }}
+      host: {{ .host }}
 spec:
   type: {{ .type }}
-  {{- if and .loadBalancerIP (eq .type "LoadBalancer") }}
-  loadBalancerIP: {{ .loadBalancerIP }}
-  {{- end }}
   ports:
     - port: {{ .port }}
       targetPort: {{ .targetPort }} 
       protocol: TCP
       name: {{.portName }}
   selector:
-    app: {{ template "prime.name" $ }}
+    app: {{ template "prime.name" $ }}-canary
     release: {{ $.Release.Name }}
     tier: backend
     track: canary
----    
 {{- end }}
 {{- end }}
