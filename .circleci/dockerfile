@@ -1,4 +1,4 @@
-# manually built and pushed as eu.gcr.io/pi-ostelco-dev/helm-builder:<helm version>
+# manually built and pushed as eu.gcr.io/pi-ostelco-prod/helm-builder:<helm version>
 FROM debian:9.3-slim
 
 RUN apt-get update && apt-get install sudo
@@ -13,7 +13,7 @@ RUN sudo apt-get --assume-yes install gnupg curl tar git \
     && sudo apt-get --assume-yes update && sudo apt-get --assume-yes install google-cloud-sdk
 
 # install helm and the gcs plugin
-ENV HELM_VERSION v2.8.1
+ENV HELM_VERSION v2.11.0
 
 RUN curl -L http://storage.googleapis.com/kubernetes-helm/helm-${HELM_VERSION}-linux-amd64.tar.gz | tar zxv -C /tmp \
     && mv /tmp/linux-amd64/helm /usr/local/bin/helm \

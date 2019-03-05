@@ -2,7 +2,7 @@ version: 2
 jobs:
     build:
       docker:
-        - image: eu.gcr.io/pi-ostelco-dev/helm-builder:2.8.1
+        - image: eu.gcr.io/pi-ostelco-prod/helm-builder:2.11.0
       steps:
         - checkout
         - run:
