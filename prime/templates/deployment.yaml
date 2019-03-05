@@ -30,32 +30,37 @@ spec:
       volumes:
       - name: config-data
         emptyDir: {}
-      {{- range .Values.prime.secrets }}
+      {{- range .Values.prime.secretVolumes }}
       - name: {{ .secretName }}-prime
         secret: 
           secretName: {{ .secretName }}
+        {{- if and .secretKey .secretPath }}  
+          items:
+            - key: {{ .secretKey }}
+              path: {{ .secretPath }}
+        {{- end }}      
       {{- end }}
-      {{- range .Values.ocsEsp.secrets }}
+      {{- range .Values.ocsEsp.secretVolumes }}
       - name: {{ .secretName }}-ocs
         secret: 
           secretName: {{ .secretName }}
       {{- end }}
-      {{- range .Values.apiEsp.secrets }}
+      {{- range .Values.apiEsp.secretVolumes }}
       - name: {{ .secretName }}-api
         secret: 
           secretName: {{ .secretName }}
       {{- end }}
-      {{- range .Values.metricsEsp.secrets }}
+      {{- range .Values.metricsEsp.secretVolumes }}
       - name: {{ .secretName }}-metrics
         secret: 
           secretName: {{ .secretName }}
       {{- end }}
-      {{- range .Values.alvinApiEsp.secrets }}
+      {{- range .Values.alvinApiEsp.secretVolumes }}
       - name: {{ .secretName }}-alvin-api
         secret: 
           secretName: {{ .secretName }}
       {{- end }}
-      {{- range .Values.houstonApiEsp.secrets }}
+      {{- range .Values.houstonApiEsp.secretVolumes }}
       - name: {{ .secretName }}-houston-api
         secret: 
           secretName: {{ .secretName }}
@@ -142,7 +147,7 @@ spec:
           {{- end }}
         {{- end }}
         volumeMounts:
-        {{- range .Values.ocsEsp.secrets }}
+        {{- range .Values.ocsEsp.secretVolumes }}
         - mountPath: {{ .containerMountPath }}
           name: {{ .secretName }}-ocs
           readOnly: true
@@ -184,7 +189,7 @@ spec:
           {{- end }}
         {{- end }}
         volumeMounts:
-        {{- range .Values.apiEsp.secrets }}
+        {{- range .Values.apiEsp.secretVolumes }}
         - mountPath: {{ .containerMountPath }}
           name: {{ .secretName }}-api
           readOnly: true
@@ -225,7 +230,7 @@ spec:
           {{- end }}
         {{- end }}
         volumeMounts:
-        {{- range .Values.metricsEsp.secrets }}
+        {{- range .Values.metricsEsp.secretVolumes }}
         - mountPath: {{ .containerMountPath }}
           name: {{ .secretName }}-metrics
           readOnly: true
@@ -266,7 +271,7 @@ spec:
           {{- end }}
         {{- end }}
         volumeMounts:
-        {{- range .Values.alvinApiEsp.secrets }}
+        {{- range .Values.alvinApiEsp.secretVolumes }}
         - mountPath: {{ .containerMountPath }}
           name: {{ .secretName }}-alvin-api
           readOnly: true
@@ -307,7 +312,7 @@ spec:
           {{- end }}
         {{- end }}
         volumeMounts:
-        {{- range .Values.houstonApiEsp.secrets }}
+        {{- range .Values.houstonApiEsp.secretVolumes }}
         - mountPath: {{ .containerMountPath }}
           name: {{ .secretName }}-houston-api
           readOnly: true
@@ -343,7 +348,7 @@ spec:
         - name: config-data
           mountPath: "/config-data"
           readOnly: true
-        {{- range .Values.prime.secrets }}
+        {{- range .Values.prime.secretVolumes }}
         - name: {{ .secretName }}-prime
           mountPath: {{ .containerMountPath }}
           readOnly: true

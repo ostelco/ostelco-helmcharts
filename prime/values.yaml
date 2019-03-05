@@ -44,7 +44,7 @@ prime:
     - 8081
     - 8082 
     - 8083 
-  secrets:
+  secretVolumes:
     - secretName: "prime-sa-key"  
       containerMountPath: "/secret"
   resources: {}
@@ -109,7 +109,7 @@ canary: {}
   #   - 8081
   #   - 8082 
   #   - 8083 
-  # secrets:
+  # secretVolumes:
   #   - secretName: "prime-sa-key"  
   #     containerMountPath: "/secret"
   # resources: {}
@@ -146,7 +146,7 @@ ocsEsp:
   ports:
     http2_port: 9000
     #ssl_port: 8443
-  # secrets: 
+  # secretVolumes: 
   #   - secretName: ocs-ostelco-ssl
   #     containerMountPath: /etc/nginx/ssl 
 
@@ -157,7 +157,7 @@ apiEsp:
   ports:
     http2_port: 9002
     #ssl_port: 443
-  # secrets: 
+  # secretVolumes: 
   #   - secretName: api-ostelco-ssl
   #     containerMountPath: /etc/nginx/ssl 
 
@@ -168,7 +168,7 @@ metricsEsp:
   ports:
     http2_port: 9004
     #ssl_port: 9443
-  # secrets: 
+  # secretVolumes: 
   #   - secretName: metrics-ostelco-ssl
   #     containerMountPath: /etc/nginx/ssl   
 
@@ -179,7 +179,7 @@ alvinApiEsp:
   ports:
     http_port: 9008
     #ssl_port: 6443
-  # secrets: 
+  # secretVolumes: 
   #   - secretName: api-ostelco-ssl
   #     containerMountPath: /etc/nginx/ssl
 
@@ -190,7 +190,7 @@ houstonApiEsp:
   ports:
     http_port: 9006
     #ssl_port: 7443
-  # secrets: 
+  # secretVolumes: 
   #   - secretName: api-ostelco-ssl
   #     containerMountPath: /etc/nginx/ssl
 
