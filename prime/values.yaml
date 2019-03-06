@@ -135,7 +135,8 @@ canary: {}
 cloudsqlProxy: 
   enabled: true
   instanceConnectionName: ""
-  secretName: ""  
+  secretName: ""
+  secretKey: ""  
 
 esp:
   image: gcr.io/endpoints-release/endpoints-runtime
