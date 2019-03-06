@@ -30,6 +30,11 @@ spec:
       volumes:
       - name: config-data
         emptyDir: {}
+      {{- if .Values.cloudsqlProxy.enabled }}  
+      - name: cloudsql-instance-credentials
+        secret:
+          secretName: {{ .Values.cloudsqlProxy.secretName }} 
+      {{- end }}     
       {{- range .Values.prime.secretVolumes }}
       - name: {{ .secretName }}-prime
         secret: 
@@ -119,6 +124,22 @@ spec:
             mountPath: /config-data/
       ## End of init containers  
       containers:
+      {{- if .Values.cloudsqlProxy.enabled }}
+      ## Start of cloudsql-proxy container
+      - name: cloudsql-proxy
+        image: gcr.io/cloudsql-docker/gce-proxy:1.11
+        command: ["/cloud_sql_proxy",
+                  "-instances={{ .Values.cloudsqlProxy.instanceConnectionName }}=tcp:5432",
+                  "-credential_file=/secrets/cloudsql/{{ .Values.cloudsqlProxy.secretKey }}"]
+        securityContext:
+          runAsUser: 2  # non-root user
+          allowPrivilegeEscalation: false
+        volumeMounts:
+          - name: cloudsql-instance-credentials
+            mountPath: /secrets/cloudsql
+            readOnly: true
+      ## End of cloudsql-proxy container
+      {{- end }}
       ## Start of ocs-esp container 
       {{- if .Values.ocsEsp.enabled }}
       - name: ocs-esp

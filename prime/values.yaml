@@ -3,8 +3,6 @@
 # Declare variables to be passed into your templates.
 
 replicaCount: 3
-#firebaseServiceAccount: ""
-  
 
 prime:
   image: eu.gcr.io/pi-ostelco-dev/prime
@@ -133,6 +131,11 @@ canary: {}
   #   prometheus.io/scrape: 'true'
   #   prometheus.io/path: '/prometheus-metrics'
   #   prometheus.io/port: '8081'
+
+cloudsqlProxy: 
+  enabled: true
+  instanceConnectionName: ""
+  secretName: ""  
 
 esp:
   image: gcr.io/endpoints-release/endpoints-runtime
