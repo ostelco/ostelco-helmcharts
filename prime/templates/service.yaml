@@ -16,7 +16,7 @@ metadata:
       apiVersion: ambassador/v1
       kind:  Mapping
       name:  {{ $.Release.Name }}_{{ .name }}_mapping
-      host:  {{ .host }}
+      host:  {{ $.Values.dnsPrefix }}{{ .host }}{{ $.Values.dnsSuffix }}
       prefix: /
       {{- if .grpcOrHttp2 }}
       grpc: True
@@ -27,8 +27,11 @@ metadata:
       kind: TLSContext
       name: {{ $.Release.Name }}_{{ .name }}_context
       hosts:
-      - {{ .host }}
+      - {{ $.Values.dnsPrefix }}{{ .host }}{{ $.Values.dnsSuffix }}
       secret: {{ $.Values.certs.tlsSecretName }}.{{ $.Release.Namespace }}
+      {{- if .grpcOrHttp2 }}
+      alpn_protocols: h2
+      {{- end }}
   {{- end }}    
 spec:
   type: {{ .type }}
@@ -81,7 +84,7 @@ metadata:
       {{- if not $.Values.canary.headers }}
       weight: {{ $.Values.canary.weight }}  
       {{- end }}
-      host: {{ .host }}
+      host: {{ $.Values.dnsPrefix }}{{ .host }}{{ $.Values.dnsSuffix }}
 spec:
   type: {{ .type }}
   ports:

@@ -2,4 +2,4 @@ apiVersion: v1
 appVersion: "1.25.0"
 description: Helm chart for Prime
 name: prime
-version: 0.4.3
+version: 0.5.0

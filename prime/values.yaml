@@ -4,6 +4,16 @@
 
 replicaCount: 3
 
+dnsPrefix: ""
+dnsSuffix: ".test.oya.world"
+
+podAutoscaling: 
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 5
+  targetCPUUtilizationPercentage: 70
+
+
 prime:
   image: eu.gcr.io/pi-ostelco-dev/prime
   tag: 8d6884cfb
@@ -146,7 +156,7 @@ esp:
 ocsEsp: 
   enabled: false
   env: {}
-  endpointAddress: ocs.dev.ostelco.org
+  endpointAddress: ocs.dev.oya.world
   ports:
     http2_port: 9000
     #ssl_port: 8443
@@ -157,7 +167,7 @@ ocsEsp:
 apiEsp: 
   enabled: false
   env: {}
-  endpointAddress: api.dev.ostelco.org
+  endpointAddress: api.dev.oya.world
   ports:
     http2_port: 9002
     #ssl_port: 443
@@ -168,7 +178,7 @@ apiEsp:
 metricsEsp:
   enabled: false
   env: {}
-  endpointAddress: metrics.dev.ostelco.org
+  endpointAddress: metrics.dev.oya.world
   ports:
     http2_port: 9004
     #ssl_port: 9443
@@ -179,7 +189,7 @@ metricsEsp:
 alvinApiEsp:
   enabled: false
   env: {}  
-  endpointAddress: alvin-api.dev.ostelco.org
+  endpointAddress: alvin-api.dev.oya.world
   ports:
     http_port: 9008
     #ssl_port: 6443
@@ -190,7 +200,7 @@ alvinApiEsp:
 houstonApiEsp:
   enabled: false
   env: {}  
-  endpointAddress: houston-api.dev.ostelco.org
+  endpointAddress: houston-api.dev.oya.world
   ports:
     http_port: 9006
     #ssl_port: 7443
@@ -214,7 +224,7 @@ services: {}
   #   port: 443
   #   targetPort: 443
   #   portName: https
-  #   host: api.dev.ostelco.org
+  #   host: api # the host name is forumlated from concatinating: dnsPrefix, this host, and dnsSuffix
   #   grpcOrHttp2: true
   #   # loadBalancerIP: x.y.z.n
   # metrics: 
@@ -223,7 +233,7 @@ services: {}
   #   port: 443
   #   targetPort: 9443  
   #   portName: grpc
-  #   host: metrics.dev.ostelco.org
+  #   host: metrics # the host name is forumlated from concatinating: dnsPrefix, this host, and dnsSuffix
   #   grpcOrHttp2: true
   #   # loadBalancerIP: x.y.z.n
   # prime-houston-api: 
@@ -232,7 +242,7 @@ services: {}
   #   port: 443
   #   targetPort: 7443  
   #   portName: https
-  #   host: houston-api.dev.ostelco.org
+  #   host: houston-api # the host name is forumlated from concatinating: dnsPrefix, this host, and dnsSuffix
   #   grpcOrhttp2: false        
   #   #loadBalancerIP: x.y.z.n
   # prime-alvin-api: 
@@ -241,7 +251,7 @@ services: {}
   #   port: 443
   #   targetPort: 6443  
   #   portName: https
-  #   host: alvin-api.dev.ostelco.org
+  #   host: alvin-api # the host name is forumlated from concatinating: dnsPrefix, this host, and dnsSuffix
   #   grpcOrHttp2: false
   #   # loadBalancerIP: x.y.z.n  
   # pseudonym-server: 
@@ -250,7 +260,7 @@ services: {}
   #   port: 80
   #   targetPort: 8080  
   #   portName: http
-  #   # host: ps.dev.ostelco.org
+  #   # host: ps # the host name is forumlated from concatinating: dnsPrefix, this host, and dnsSuffix
   #   # grpcOrHttp2: false
   #   # loadBalancerIP: x.y.z.n  
 
@@ -271,9 +281,9 @@ certs:
   enabled: false
   dnsProvider: dev-clouddns
   issuer: letsencrypt-staging # or letsencrypt-production
-  tlsSecretName: new-dev-ostelco-tls
+  tlsSecretName: test-oya-tls
   hosts:
-    - '*.new.dev.ostelco.org'
+    - '*.test.oya.world'
 
 
 disruptionBudget: 
