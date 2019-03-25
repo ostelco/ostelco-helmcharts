@@ -49,26 +49,61 @@ spec:
       - name: {{ .secretName }}-ocs
         secret: 
           secretName: {{ .secretName }}
+        {{- if eq .type "ssl" }}  
+          items:
+          - key: tls.crt
+            path: nginx.crt
+          - key: tls.key
+            path: nginx.key 
+        {{- end }}        
       {{- end }}
       {{- range .Values.apiEsp.secretVolumes }}
       - name: {{ .secretName }}-api
         secret: 
           secretName: {{ .secretName }}
+        {{- if eq .type "ssl" }}  
+          items:
+          - key: tls.crt
+            path: nginx.crt
+          - key: tls.key
+            path: nginx.key 
+        {{- end }}            
       {{- end }}
       {{- range .Values.metricsEsp.secretVolumes }}
       - name: {{ .secretName }}-metrics
         secret: 
           secretName: {{ .secretName }}
+        {{- if eq .type "ssl" }}  
+          items:
+          - key: tls.crt
+            path: nginx.crt
+          - key: tls.key
+            path: nginx.key 
+        {{- end }}               
       {{- end }}
       {{- range .Values.alvinApiEsp.secretVolumes }}
       - name: {{ .secretName }}-alvin-api
         secret: 
           secretName: {{ .secretName }}
+        {{- if eq .type "ssl" }}  
+          items:
+          - key: tls.crt
+            path: nginx.crt
+          - key: tls.key
+            path: nginx.key 
+        {{- end }}              
       {{- end }}
       {{- range .Values.houstonApiEsp.secretVolumes }}
       - name: {{ .secretName }}-houston-api
         secret: 
           secretName: {{ .secretName }}
+        {{- if eq .type "ssl" }}  
+          items:
+          - key: tls.crt
+            path: nginx.crt
+          - key: tls.key
+            path: nginx.key 
+        {{- end }}              
       {{- end }}
       
       # {{- if .Values.certs.enabled }}
