@@ -14,5 +14,5 @@ spec:
     - name: wget
       image: busybox
       command: ['wget']
-      args:  ['{{ include "hss-adapter.fullname" . }}:{{ .Values.service.port }}']
+      args:  ['{{ include "hss-adapter.fullname" . }}:8081/healthcheck']
   restartPolicy: Never
