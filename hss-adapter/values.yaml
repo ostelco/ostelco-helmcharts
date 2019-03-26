@@ -5,16 +5,29 @@
 replicaCount: 1
 
 image:
-  repository: nginx
-  tag: stable
-  pullPolicy: IfNotPresent
+  repository: hss-adapter
+  tag: latest
+  pullPolicy: Never
+#  Used to be "IfNotPresent", but changed it to not mess up the locally built images when running on laptop
 
 nameOverride: ""
 fullnameOverride: ""
 
 service:
   type: ClusterIP
-  port: 80
+  ports: 
+    - protocol: TCP
+      port: 9000
+      targetPort: 9000
+      name: hss-adapter-protocol
+    - protocol: TCP
+      port: 8080
+      targetPort: 8080
+      name: dropwizard-payload
+    - protocol: TCP
+      port: 8081
+      targetPort: 8081
+      name: dropwizard-admin
 
 ingress:
   enabled: false
