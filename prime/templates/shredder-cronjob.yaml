@@ -15,7 +15,7 @@ spec:
             imagePullPolicy: Always
             env:
             - name: DATASET_PROJECT
-              value: {{ .Values.cronjobs.extractor.datasource_project | default "pi-ostelco-dev" }}
+              value: {{ .Values.cronjobs.extractor.dataset_project | default "pi-ostelco-dev" }}
            {{- if .Values.cronjobs.extractor.dev }}
             - name: DATASTORE_NAMESPACE
               value: dev
