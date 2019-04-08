@@ -17,9 +17,10 @@ spec:
             env:
             - name: DATASET_PROJECT
               value: {{ .Values.cronjobs.extractor.dataset_project | default "pi-ostelco-dev" }}
-           {{- if .Values.cronjobs.extractor.dev }}
-            - name: DATASET_MODIFIER
-              value: _dev
-           {{- end }}   
+            - name: ANALYTICS_DATASET
+              valueFrom:
+                secretKeyRef:
+                  name: analytics-secrets
+                  key: analyticsDatasetName
           restartPolicy: Never
-{{- end }}          
+{{- end }}
