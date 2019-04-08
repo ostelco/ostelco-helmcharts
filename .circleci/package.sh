@@ -80,9 +80,11 @@ for d in */ ; do
     fi  
 done
 
+echo "Pulling existing index.yalm"
+gsutil cp gs://${OSTELCO_GCS_HELM_REPO_BUCKET_NAME}/index.yaml oldIndex.yaml
 
 echo "generating index.yaml ..."
-helm repo index .charts --url ${OSTELCO_GCS_HELM_REPO_URL}
+helm repo index .charts --url ${OSTELCO_GCS_HELM_REPO_URL} --merge oldIndex.yaml
 
 echo "pushing charts to ${OSTELCO_HELM_REPO_NAME} repo ..."
 
