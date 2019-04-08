@@ -1,0 +1,24 @@
+{{- if .Values.cronjobs.extractor.enabled  }}
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: bq-metrics-extractor
+spec:
+  schedule: "*/30 * * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name:  bq-metrics-extractor
+            image: {{ .Values.cronjobs.extractor.image }}:{{ .Values.cronjobs.extractor.tag }}
+            imagePullPolicy: Always
+            env:
+            - name: DATASET_PROJECT
+              value: {{ .Values.cronjobs.extractor.datasource_project | default "pi-osteclo-dev" }}
+           {{- if .Values.cronjobs.extractor.dev }}
+            - name: DATASET_MODIFIER
+              value: _dev
+           {{- end }}   
+          restartPolicy: Never
+{{- end }}          

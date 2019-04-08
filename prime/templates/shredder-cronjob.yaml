@@ -1,0 +1,34 @@
+{{- if .Values.cronjobs.shredder.enabled  }}
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: scaninfo-shredder
+spec:
+  schedule: "*/30 * * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name:  scaninfo-shredder
+            image: {{ .Values.cronjobs.shredder.image }}:{{ .Values.cronjobs.shredder.tag }}
+            imagePullPolicy: Always
+            env:
+            - name: DATASET_PROJECT
+              value: {{ .Values.cronjobs.extractor.datasource_project | default "pi-ostelco-dev" }}
+           {{- if .Values.cronjobs.extractor.dev }}
+            - name: DATASTORE_NAMESPACE
+              value: dev
+           {{- end }}  
+            - name: JUMIO_API_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: jumio-secrets
+                  key: apiToken
+            - name: JUMIO_API_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: jumio-secrets
+                  key: apiSecret
+          restartPolicy: Never
+{{- end }}          

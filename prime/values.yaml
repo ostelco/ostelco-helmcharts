@@ -13,6 +13,20 @@ podAutoscaling:
   maxReplicas: 5
   targetCPUUtilizationPercentage: 70
 
+cronjobs: 
+  extractor: 
+    enabled: false
+    # image: eu.gcr.io/pi-ostelco-dev/bq-metrics-extractor
+    # tag: "1.2.712.1.0-2be718f8-dev"  
+    # dataset_project: pi-ostelco-dev
+    # dev: true
+  shredder:
+    enabled: false
+    # image: eu.gcr.io/pi-ostelco-dev/scaninfo-shredder
+    # tag: "1.0.0-6052932a-dev"
+    # dataset_project: pi-ostelco-dev
+    # dev: true  
+  
 
 prime:
   image: eu.gcr.io/pi-ostelco-dev/prime
@@ -263,6 +277,15 @@ services: {}
   #   # host: ps # the host name is forumlated from concatinating: dnsPrefix, this host, and dnsSuffix
   #   # grpcOrHttp2: false
   #   # loadBalancerIP: x.y.z.n  
+  # smdpplus: 
+  #   name: smdpplus
+  #   type: ClusterIP
+  #   port: 80
+  #   targetPort: 8080
+  #   portName: http
+  #   host: smdpplus
+  #   clientCert: true  
+  #   caCert: smdp-cacert.dev # secretname.namespace
 
 ingress:
   enabled: false

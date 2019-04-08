@@ -29,6 +29,10 @@ metadata:
       hosts:
       - {{ $.Values.dnsPrefix }}{{ .host }}{{ $.Values.dnsSuffix }}
       secret: {{ $.Values.certs.tlsSecretName }}.{{ $.Release.Namespace }}
+      {{- if .clientCert }}
+      ca_secret: {{ .caCert }}
+      cert_required: True
+      {{- end }}
       {{- if .grpcOrHttp2 }}
       alpn_protocols: h2
       {{- end }}
