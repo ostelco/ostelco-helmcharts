@@ -3,6 +3,7 @@ apiVersion: batch/v1beta1
 kind: CronJob
 metadata:
   name: bq-metrics-extractor
+  namespace: {{ .Release.Namespace }}
 spec:
   schedule: "*/30 * * * *"
   jobTemplate:
