@@ -239,6 +239,8 @@ services: {}
   #   portName: https
   #   host: api # the host name is forumlated from concatinating: dnsPrefix, this host, and dnsSuffix
   #   grpcOrHttp2: true
+  #   ambassadorMappingOptions:
+  #     timeout_ms: 6000
   #   # loadBalancerIP: x.y.z.n
   # metrics: 
   #   name: prime-metrics

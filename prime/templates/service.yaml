@@ -21,7 +21,10 @@ metadata:
       {{- if .grpcOrHttp2 }}
       grpc: True
       {{- end }}
-      service: {{ $.Release.Name }}-{{ .name }}.{{ $.Release.Namespace }}  
+      service: {{ $.Release.Name }}-{{ .name }}.{{ $.Release.Namespace }} 
+      {{- with .ambassadorMappingOptions }}
+{{ toYaml . | indent 6 }}      
+      {{- end }} 
       ---
       apiVersion: ambassador/v1
       kind: TLSContext
