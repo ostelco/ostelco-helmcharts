@@ -17,26 +17,26 @@ spec:
   minReplicas: {{ .Values.podAutoscaling.minReplicas }}
   maxReplicas: {{ .Values.podAutoscaling.maxReplicas }}
   targetCPUUtilizationPercentage: {{ .Values.podAutoscaling.targetCPUUtilizationPercentage }}
----
-{{- if .Values.canary }}
-apiVersion: autoscaling/v1
-kind: HorizontalPodAutoscaler
-metadata:
-  labels:
-    app: {{ template "prime.name" $ }}
-    chart: {{ template "prime.chart" $ }}
-    release: {{ $.Release.Name }}
-    heritage: {{ $.Release.Service }}
-    tag: {{ $.Values.prime.tag }}
-  name: {{ template "prime.fullname" . }}
-spec:
-  scaleTargetRef:
-    apiVersion: apps/v1
-    kind: Deployment
-    name: {{ template "prime.fullname" . }}-canary
-  minReplicas: {{ .Values.podAutoscaling.minReplicas }}
-  maxReplicas: {{ .Values.podAutoscaling.maxReplicas }}
-  targetCPUUtilizationPercentage: {{ .Values.podAutoscaling.targetCPUUtilizationPercentage }}
----
-{{- end }}  
+# ---
+# {{- if .Values.canary }}
+# apiVersion: autoscaling/v1
+# kind: HorizontalPodAutoscaler
+# metadata:
+#   labels:
+#     app: {{ template "prime.name" $ }}
+#     chart: {{ template "prime.chart" $ }}
+#     release: {{ $.Release.Name }}
+#     heritage: {{ $.Release.Service }}
+#     tag: {{ $.Values.prime.tag }}
+#   name: {{ template "prime.fullname" . }}-canary
+# spec:
+#   scaleTargetRef:
+#     apiVersion: apps/v1
+#     kind: Deployment
+#     name: {{ template "prime.fullname" . }}-canary
+#   minReplicas: {{ .Values.podAutoscaling.minReplicas }}
+#   maxReplicas: {{ .Values.podAutoscaling.maxReplicas }}
+#   targetCPUUtilizationPercentage: {{ .Values.podAutoscaling.targetCPUUtilizationPercentage }}
+# ---
+# {{- end }}  
 {{- end }}
