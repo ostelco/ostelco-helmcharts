@@ -70,7 +70,7 @@ metadata:
     release: {{ $.Release.Name }}
     heritage: {{ $.Release.Service }}
     track: canary
-    tag: {{ $.Values.canary.tag }}
+    tag: {{ $.Values.canary.tag }}     
   annotations:
     getambassador.io/config: |
       --- 
@@ -92,6 +92,9 @@ metadata:
       weight: {{ $.Values.canary.weight }}  
       {{- end }}
       host: {{ $.Values.dnsPrefix }}{{ .host }}{{ $.Values.dnsSuffix }}
+      {{- with .ambassadorMappingOptions }}
+{{ toYaml . | indent 6 }}      
+      {{- end }}
 spec:
   type: {{ .type }}
   ports:
