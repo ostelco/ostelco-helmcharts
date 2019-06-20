@@ -167,100 +167,100 @@ houstonApiEsp: {}
   # #   - secretName: api-ostelco-ssl
   # #     containerMountPath: /etc/nginx/ssl
 
-services: 
-  ocs:
-    name: prime-ocs
-    type: ClusterIP
-    port: 443
-    targetPort: 8443
-    portName: grpc 
-    host: ocs
-    grpcOrHttp2: true
-   # loadBalancerIP: x.y.z.n
-    canary: {}
-      # weight: 10
-      # headers: 
-      #   x-mode: canary 
-  api:
-    name: prime-api
-    type: ClusterIP
-    port: 443
-    targetPort: 443
-    portName: https
-    host: api # the host name is forumlated from concatinating: dnsPrefix, this host, and dnsSuffix
-    grpcOrHttp2: true
-    ambassadorMappingOptions:
-      timeout_ms: 6000
-    # loadBalancerIP: x.y.z.n
-    canary: {}
-      # weight: 10
-      # headers: 
-      #   x-mode: canary
-  metrics: 
-    name: prime-metrics
-    type: ClusterIP
-    port: 443
-    targetPort: 9443  
-    portName: grpc
-    host: metrics # the host name is forumlated from concatinating: dnsPrefix, this host, and dnsSuffix
-    grpcOrHttp2: true
-    # loadBalancerIP: x.y.z.n
-    canary: {}
-      # weight: 10
-      # headers: 
-      #   x-mode: canary
-  prime-houston-api: 
-    name: prime-houston-api
-    type: ClusterIP
-    port: 443
-    targetPort: 7443  
-    portName: https
-    host: houston-api # the host name is forumlated from concatinating: dnsPrefix, this host, and dnsSuffix
-    grpcOrhttp2: false        
-    #loadBalancerIP: x.y.z.n
-    canary: {}
-      # weight: 10
-      # headers: 
-      #   x-mode: canary
-  prime-alvin-api: 
-    name: prime-alvin-api
-    type: ClusterIP
-    port: 443
-    targetPort: 6443  
-    portName: https
-    host: alvin-api # the host name is forumlated from concatinating: dnsPrefix, this host, and dnsSuffix
-    grpcOrHttp2: false
-    # loadBalancerIP: x.y.z.n  
-    canary: {}
-      # weight: 10
-      # headers: 
-      #   x-mode: canary
-  pseudonym-server: 
-    name: pseudonym-server
-    type: ClusterIP
-    port: 80
-    targetPort: 8080  
-    portName: http
-    # host: ps # the host name is forumlated from concatinating: dnsPrefix, this host, and dnsSuffix
-    # grpcOrHttp2: false
-    # loadBalancerIP: x.y.z.n  
-    canary: {}
-      # weight: 10
-      # headers: 
-      #   x-mode: canary
-  smdpplus: 
-    name: smdpplus
-    type: ClusterIP
-    port: 80
-    targetPort: 8080
-    portName: http
-    host: smdpplus
-    clientCert: true  
-    caCert: smdp-cacert.dev # secretname.namespace
-    canary: {}
-      # weight: 10
-      # headers: 
-      #   x-mode: canary
+services: {}
+  # ocs:
+  #   name: prime-ocs
+  #   type: ClusterIP
+  #   port: 443
+  #   targetPort: 8443
+  #   portName: grpc 
+  #   host: ocs
+  #   grpcOrHttp2: true
+  #  # loadBalancerIP: x.y.z.n
+  #   canary: {}
+  #     # weight: 10
+  #     # headers: 
+  #     #   x-mode: canary 
+  # api:
+  #   name: prime-api
+  #   type: ClusterIP
+  #   port: 443
+  #   targetPort: 443
+  #   portName: https
+  #   host: api # the host name is forumlated from concatinating: dnsPrefix, this host, and dnsSuffix
+  #   grpcOrHttp2: true
+  #   ambassadorMappingOptions:
+  #     timeout_ms: 6000
+  #   # loadBalancerIP: x.y.z.n
+  #   canary: {}
+  #     # weight: 10
+  #     # headers: 
+  #     #   x-mode: canary
+  # metrics: 
+  #   name: prime-metrics
+  #   type: ClusterIP
+  #   port: 443
+  #   targetPort: 9443  
+  #   portName: grpc
+  #   host: metrics # the host name is forumlated from concatinating: dnsPrefix, this host, and dnsSuffix
+  #   grpcOrHttp2: true
+  #   # loadBalancerIP: x.y.z.n
+  #   canary: {}
+  #     # weight: 10
+  #     # headers: 
+  #     #   x-mode: canary
+  # prime-houston-api: 
+  #   name: prime-houston-api
+  #   type: ClusterIP
+  #   port: 443
+  #   targetPort: 7443  
+  #   portName: https
+  #   host: houston-api # the host name is forumlated from concatinating: dnsPrefix, this host, and dnsSuffix
+  #   grpcOrhttp2: false        
+  #   #loadBalancerIP: x.y.z.n
+  #   canary: {}
+  #     # weight: 10
+  #     # headers: 
+  #     #   x-mode: canary
+  # prime-alvin-api: 
+  #   name: prime-alvin-api
+  #   type: ClusterIP
+  #   port: 443
+  #   targetPort: 6443  
+  #   portName: https
+  #   host: alvin-api # the host name is forumlated from concatinating: dnsPrefix, this host, and dnsSuffix
+  #   grpcOrHttp2: false
+  #   # loadBalancerIP: x.y.z.n  
+  #   canary: {}
+  #     # weight: 10
+  #     # headers: 
+  #     #   x-mode: canary
+  # pseudonym-server: 
+  #   name: pseudonym-server
+  #   type: ClusterIP
+  #   port: 80
+  #   targetPort: 8080  
+  #   portName: http
+  #   # host: ps # the host name is forumlated from concatinating: dnsPrefix, this host, and dnsSuffix
+  #   # grpcOrHttp2: false
+  #   # loadBalancerIP: x.y.z.n  
+  #   canary: {}
+  #     # weight: 10
+  #     # headers: 
+  #     #   x-mode: canary
+  # smdpplus: 
+  #   name: smdpplus
+  #   type: ClusterIP
+  #   port: 80
+  #   targetPort: 8080
+  #   portName: http
+  #   host: smdpplus
+  #   clientCert: true  
+  #   caCert: smdp-cacert.dev # secretname.namespace
+  #   canary: {}
+  #     # weight: 10
+  #     # headers: 
+  #     #   x-mode: canary
 
 certs: {}
   # enabled: true
