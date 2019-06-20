@@ -11,7 +11,15 @@ podAutoscaling:
   enabled: false
   minReplicas: 1
   maxReplicas: 5
-  targetCPUUtilizationPercentage: 70
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        targetAverageUtilization: 80
+    - type: Resource
+      resource:
+        name: memory
+        targetAverageUtilization: 70
 
 cronjobs: 
   extractor: 
@@ -90,224 +98,177 @@ prime:
     prometheus.io/path: '/prometheus-metrics'
     prometheus.io/port: '8081'  
 
-canary: {}
-  # weight: 25 # either set the weight or headers below. If both are set, only headers will be used.
-  # headers: # only route requests with these headers to canary
-  #   x-mode: canary
-  # image: gcr.io/pi-ostelco-dev/prime
-  # tag: 8d6884cfb
-  # pullPolicy: Always
-  # configDataBucket: "gs://pi-ostelco-dev-prime-files/dev"
-  # env: 
-  #   FIREBASE_ROOT_PATH: dev
-  #   NEO4J_HOST: neo4j-neo4j.neo4j.svc.cluster.local
-  #   SLACK_CHANNEL: prime-alerts
-  #   DATASTORE_NAMESPACE: dev
-  #   DATA_TRAFFIC_TOPIC: data-traffic
-  #   PURCHASE_INFO_TOPIC: purchase-info
-  #   ACTIVE_USERS_TOPIC: active-users
-  # envFromSecret:
-  #   - name: SLACK_WEBHOOK_URI
-    #   secretName: slack-secrets
-    #   secretKey: slackWebHookUri
-    # - name: STRIPE_API_KEY
-    #   secretName: stripe-secrets
-    #   secretKey: stripeApiKey
-    # - name: STRIPE_ENDPOINT_SECRET 
-    #   secretName: stripe-secrets
-    #   secretKey: stripeEndpointSecret
-    # - name: SCANINFO_STORAGE_BUCKET 
-    #   secretName: scaninfo-secrets
-    #   secretKey:  bucketName
-    # - name: JUMIO_API_TOKEN
-    #   secretName: jumio-secrets
-    #   secretKey: apiToken        
-    # - name: JUMIO_API_SECRET
-    #   secretName: jumio-secrets
-    #   secretKey: apiSecret   
-  # ports:
-  #   - 8080
-  #   - 8081
-  #   - 8082 
-  #   - 8083 
-  # secretVolumes:
-  #   - secretName: "prime-sa-key"  
-  #     containerMountPath: "/secret"
-  # resources: {}
-  # # We usually recommend not to specify default resources and to leave this as a conscious
-  # # choice for the user. This also increases chances charts run on environments with little
-  # # resources, such as Minikube. If you do want to specify resources, uncomment the following
-  # # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
-  # # limits:
-  # #  cpu: 100m
-  # #  memory: 128Mi
-  # # requests:
-  # #  cpu: 100m
-  # #  memory: 128Mi  
-  # livenessProbe: {}
-  #   # path: /
-  #   # port: 8081
-  # readinessProbe: {}
-  #   # path: /
-  #   # port: 8081  
-  # annotations: 
-  #   prometheus.io/scrape: 'true'
-  #   prometheus.io/path: '/prometheus-metrics'
-  #   prometheus.io/port: '8081'
-
+# Used to proxy connection to CloudSQL DB
 cloudsqlProxy: 
   enabled: true
   instanceConnectionName: ""
   secretName: ""
   secretKey: ""  
 
+# common esp image config
 esp:
   image: gcr.io/endpoints-release/endpoints-runtime
   tag: 1
   pullPolicy: IfNotPresent
 
-ocsEsp: 
-  enabled: false
-  env: {}
-  endpointAddress: ocs.dev.oya.world
-  ports:
-    http2_port: 9000
-    #ssl_port: 8443
-  # secretVolumes: 
-  #   - secretName: ocs-ostelco-ssl
-  #     containerMountPath: /etc/nginx/ssl 
+# specific esp containers config
+ocsEsp: {}
+  # enabled: true
+  # env: {}
+  # endpointAddress: ocs.dev.oya.world
+  # ports:
+  #   http2_port: 9000
+  #   #ssl_port: 8443
+  # # secretVolumes: 
+  # #   - secretName: ocs-ostelco-ssl
+  # #     containerMountPath: /etc/nginx/ssl 
 
-apiEsp: 
-  enabled: false
-  env: {}
-  endpointAddress: api.dev.oya.world
-  ports:
-    http2_port: 9002
-    #ssl_port: 443
-  # secretVolumes: 
-  #   - secretName: api-ostelco-ssl
-  #     containerMountPath: /etc/nginx/ssl 
+apiEsp: {}
+  # enabled: true
+  # env: {}
+  # endpointAddress: api.dev.oya.world
+  # ports:
+  #   http2_port: 9002
+  #   #ssl_port: 443
+  # # secretVolumes: 
+  # #   - secretName: api-ostelco-ssl
+  # #     containerMountPath: /etc/nginx/ssl 
 
-metricsEsp:
-  enabled: false
-  env: {}
-  endpointAddress: metrics.dev.oya.world
-  ports:
-    http2_port: 9004
-    #ssl_port: 9443
-  # secretVolumes: 
-  #   - secretName: metrics-ostelco-ssl
-  #     containerMountPath: /etc/nginx/ssl   
+metricsEsp: {}
+  # enabled: true
+  # env: {}
+  # endpointAddress: metrics.dev.oya.world
+  # ports:
+  #   http2_port: 9004
+  #   #ssl_port: 9443
+  # # secretVolumes: 
+  # #   - secretName: metrics-ostelco-ssl
+  # #     containerMountPath: /etc/nginx/ssl   
 
-alvinApiEsp:
-  enabled: false
-  env: {}  
-  endpointAddress: alvin-api.dev.oya.world
-  ports:
-    http_port: 9008
-    #ssl_port: 6443
-  # secretVolumes: 
-  #   - secretName: api-ostelco-ssl
-  #     containerMountPath: /etc/nginx/ssl
+alvinApiEsp: {}
+  # enabled: true
+  # env: {}  
+  # endpointAddress: alvin-api.dev.oya.world
+  # ports:
+  #   http_port: 9008
+  #   #ssl_port: 6443
+  # # secretVolumes: 
+  # #   - secretName: api-ostelco-ssl
+  # #     containerMountPath: /etc/nginx/ssl
 
-houstonApiEsp:
-  enabled: false
-  env: {}  
-  endpointAddress: houston-api.dev.oya.world
-  ports:
-    http_port: 9006
-    #ssl_port: 7443
-  # secretVolumes: 
-  #   - secretName: api-ostelco-ssl
-  #     containerMountPath: /etc/nginx/ssl
+houstonApiEsp: {}
+  # enabled: true
+  # env: {}  
+  # endpointAddress: houston-api.dev.oya.world
+  # ports:
+  #   http_port: 9006
+  #   #ssl_port: 7443
+  # # secretVolumes: 
+  # #   - secretName: api-ostelco-ssl
+  # #     containerMountPath: /etc/nginx/ssl
 
-services: {}
-  # ocs:
-  #   name: prime-ocs
-  #   type: ClusterIP
-  #   port: 443
-  #   targetPort: 8443
-  #   portName: grpc 
-  #   host: ocs.dev.ostelco.org
-  #   grpcOrHttp2: true
-  #  # loadBalancerIP: x.y.z.n
-  # api:
-  #   name: prime-api
-  #   type: ClusterIP
-  #   port: 443
-  #   targetPort: 443
-  #   portName: https
-  #   host: api # the host name is forumlated from concatinating: dnsPrefix, this host, and dnsSuffix
-  #   grpcOrHttp2: true
-  #   ambassadorMappingOptions:
-  #     timeout_ms: 6000
-  #   # loadBalancerIP: x.y.z.n
-  # metrics: 
-  #   name: prime-metrics
-  #   type: ClusterIP
-  #   port: 443
-  #   targetPort: 9443  
-  #   portName: grpc
-  #   host: metrics # the host name is forumlated from concatinating: dnsPrefix, this host, and dnsSuffix
-  #   grpcOrHttp2: true
-  #   # loadBalancerIP: x.y.z.n
-  # prime-houston-api: 
-  #   name: prime-houston-api
-  #   type: ClusterIP
-  #   port: 443
-  #   targetPort: 7443  
-  #   portName: https
-  #   host: houston-api # the host name is forumlated from concatinating: dnsPrefix, this host, and dnsSuffix
-  #   grpcOrhttp2: false        
-  #   #loadBalancerIP: x.y.z.n
-  # prime-alvin-api: 
-  #   name: prime-alvin-api
-  #   type: ClusterIP
-  #   port: 443
-  #   targetPort: 6443  
-  #   portName: https
-  #   host: alvin-api # the host name is forumlated from concatinating: dnsPrefix, this host, and dnsSuffix
-  #   grpcOrHttp2: false
-  #   # loadBalancerIP: x.y.z.n  
-  # pseudonym-server: 
-  #   name: pseudonym-server
-  #   type: ClusterIP
-  #   port: 80
-  #   targetPort: 8080  
-  #   portName: http
-  #   # host: ps # the host name is forumlated from concatinating: dnsPrefix, this host, and dnsSuffix
-  #   # grpcOrHttp2: false
-  #   # loadBalancerIP: x.y.z.n  
-  # smdpplus: 
-  #   name: smdpplus
-  #   type: ClusterIP
-  #   port: 80
-  #   targetPort: 8080
-  #   portName: http
-  #   host: smdpplus
-  #   clientCert: true  
-  #   caCert: smdp-cacert.dev # secretname.namespace
+services: 
+  ocs:
+    name: prime-ocs
+    type: ClusterIP
+    port: 443
+    targetPort: 8443
+    portName: grpc 
+    host: ocs
+    grpcOrHttp2: true
+   # loadBalancerIP: x.y.z.n
+    canary: {}
+      # weight: 10
+      # headers: 
+      #   x-mode: canary 
+  api:
+    name: prime-api
+    type: ClusterIP
+    port: 443
+    targetPort: 443
+    portName: https
+    host: api # the host name is forumlated from concatinating: dnsPrefix, this host, and dnsSuffix
+    grpcOrHttp2: true
+    ambassadorMappingOptions:
+      timeout_ms: 6000
+    # loadBalancerIP: x.y.z.n
+    canary: {}
+      # weight: 10
+      # headers: 
+      #   x-mode: canary
+  metrics: 
+    name: prime-metrics
+    type: ClusterIP
+    port: 443
+    targetPort: 9443  
+    portName: grpc
+    host: metrics # the host name is forumlated from concatinating: dnsPrefix, this host, and dnsSuffix
+    grpcOrHttp2: true
+    # loadBalancerIP: x.y.z.n
+    canary: {}
+      # weight: 10
+      # headers: 
+      #   x-mode: canary
+  prime-houston-api: 
+    name: prime-houston-api
+    type: ClusterIP
+    port: 443
+    targetPort: 7443  
+    portName: https
+    host: houston-api # the host name is forumlated from concatinating: dnsPrefix, this host, and dnsSuffix
+    grpcOrhttp2: false        
+    #loadBalancerIP: x.y.z.n
+    canary: {}
+      # weight: 10
+      # headers: 
+      #   x-mode: canary
+  prime-alvin-api: 
+    name: prime-alvin-api
+    type: ClusterIP
+    port: 443
+    targetPort: 6443  
+    portName: https
+    host: alvin-api # the host name is forumlated from concatinating: dnsPrefix, this host, and dnsSuffix
+    grpcOrHttp2: false
+    # loadBalancerIP: x.y.z.n  
+    canary: {}
+      # weight: 10
+      # headers: 
+      #   x-mode: canary
+  pseudonym-server: 
+    name: pseudonym-server
+    type: ClusterIP
+    port: 80
+    targetPort: 8080  
+    portName: http
+    # host: ps # the host name is forumlated from concatinating: dnsPrefix, this host, and dnsSuffix
+    # grpcOrHttp2: false
+    # loadBalancerIP: x.y.z.n  
+    canary: {}
+      # weight: 10
+      # headers: 
+      #   x-mode: canary
+  smdpplus: 
+    name: smdpplus
+    type: ClusterIP
+    port: 80
+    targetPort: 8080
+    portName: http
+    host: smdpplus
+    clientCert: true  
+    caCert: smdp-cacert.dev # secretname.namespace
+    canary: {}
+      # weight: 10
+      # headers: 
+      #   x-mode: canary
 
-ingress:
-  enabled: false
-  annotations: {}
-    # kubernetes.io/ingress.class: nginx
-  path: /
-  hosts:
-    - prime.local
-  tls: []
-  #  - secretName: chart-example-tls
-  #    hosts:
-  #      - chart-example.local
-
-
-certs: 
-  enabled: false
-  dnsProvider: dev-clouddns
-  issuer: letsencrypt-staging # or letsencrypt-production
-  tlsSecretName: test-oya-tls
-  hosts:
-    - '*.test.oya.world'
+certs: {}
+  # enabled: true
+  # dnsProvider: dev-clouddns
+  # issuer: letsencrypt-staging # or letsencrypt-production
+  # tlsSecretName: test-oya-tls
+  # hosts:
+  #   - '*.test.oya.world'
 
 
 disruptionBudget: 

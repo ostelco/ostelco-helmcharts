@@ -25,6 +25,17 @@ metadata:
       {{- with .ambassadorMappingOptions }}
 {{ toYaml . | indent 6 }}      
       {{- end }} 
+      {{- if .canary }}
+      {{- if .canary.headers }}
+      headers:
+        {{- range $k,$v := .canary.headers }}
+        {{ $k }}: {{ $v }}
+        {{- end }}
+      {{- else }}  
+      weight: {{ .canary.weight }}  
+      {{- end }}
+      {{- end }}
+      {{- if not .canary }}
       ---
       apiVersion: ambassador/v1
       kind: TLSContext
@@ -38,6 +49,7 @@ metadata:
       {{- end }}
       {{- if .grpcOrHttp2 }}
       alpn_protocols: h2
+      {{- end }}
       {{- end }}
   {{- end }}    
 spec:
@@ -55,57 +67,4 @@ spec:
     release: {{ $.Release.Name }}
     tier: backend
 ---
-{{- end }}
-
-# canary service
-{{- if and .Values.canary .Values.services.api }}
-{{- with .Values.services.api }}
-apiVersion: v1
-kind: Service
-metadata:
-  name: {{ $.Release.Name }}-{{ .name }}-canary
-  labels:
-    app: {{ template "prime.name" $ }}
-    chart: {{ template "prime.chart" $ }}
-    release: {{ $.Release.Name }}
-    heritage: {{ $.Release.Service }}
-    track: canary
-    tag: {{ $.Values.canary.tag }}     
-  annotations:
-    getambassador.io/config: |
-      --- 
-      apiVersion: ambassador/v1
-      kind: Mapping
-      name: {{ $.Release.Name }}_{{ .name }}_canary_mapping
-      service: {{ $.Release.Name }}-{{ .name }}-canary.{{ $.Release.Namespace }}
-      prefix: /
-      {{- if .grpcOrHttp2 }}
-      grpc: True
-      {{- end }}
-      {{- if $.Values.canary.headers }}
-      headers:
-        {{- range $k,$v := $.Values.canary.headers }}
-        {{ $k }}: {{ $v }}
-        {{- end }}
-      {{- end }}  
-      {{- if not $.Values.canary.headers }}
-      weight: {{ $.Values.canary.weight }}  
-      {{- end }}
-      host: {{ $.Values.dnsPrefix }}{{ .host }}{{ $.Values.dnsSuffix }}
-      {{- with .ambassadorMappingOptions }}
-{{ toYaml . | indent 6 }}      
-      {{- end }}
-spec:
-  type: {{ .type }}
-  ports:
-    - port: {{ .port }}
-      targetPort: {{ .targetPort }} 
-      protocol: TCP
-      name: {{.portName }}
-  selector:
-    app: {{ template "prime.name" $ }}-canary
-    release: {{ $.Release.Name }}
-    tier: backend
-    track: canary
-{{- end }}
 {{- end }}

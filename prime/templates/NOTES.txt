@@ -1,6 +1,1 @@
-{{- if .Values.ingress.enabled }}
-Get the application URL by running these commands:
-{{- range .Values.ingress.hosts }}
-  http{{ if $.Values.ingress.tls }}s{{ end }}://{{ . }}{{ $.Values.ingress.path }}
-{{- end }}
-{{- end }}
+Check https://github.com/ostelco/ostelco-core for more information about Prime.
