@@ -9,17 +9,17 @@ dnsSuffix: ".test.oya.world"
 
 podAutoscaling: 
   enabled: false
-  minReplicas: 1
-  maxReplicas: 5
-  metrics:
-    - type: Resource
-      resource:
-        name: cpu
-        targetAverageUtilization: 80
-    - type: Resource
-      resource:
-        name: memory
-        targetAverageUtilization: 70
+  # minReplicas: 1
+  # maxReplicas: 5
+  # metrics:
+  #   - type: Resource
+  #     resource:
+  #       name: cpu
+  #       targetAverageUtilization: 80
+  #   - type: Resource
+  #     resource:
+  #       name: memory
+  #       targetAverageUtilization: 70
 
 cronjobs: 
   extractor: 
