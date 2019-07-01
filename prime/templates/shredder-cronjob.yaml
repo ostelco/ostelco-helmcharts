@@ -32,4 +32,8 @@ spec:
                   name: jumio-secrets
                   key: apiSecret
           restartPolicy: Never
+          {{- with .Values.nodeSelector }}
+          nodeSelector:
+{{ toYaml . | indent 12 }}
+          {{- end }}
 {{- end }}          

@@ -23,4 +23,8 @@ spec:
                   name: analytics-secrets
                   key: analyticsDatasetName
           restartPolicy: Never
+          {{- with .Values.nodeSelector }}
+          nodeSelector:
+{{ toYaml . | indent 12 }}
+          {{- end }}
 {{- end }}
